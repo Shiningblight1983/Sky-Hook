@@ -1,0 +1,1898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkyAnchor — Aerial Observation & Cloud Triangulation</title>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sky: #07090f;
+    --panel: #0d1117;
+    --panel2: #111820;
+    --border: #1e3040;
+    --amber: #e8a020;
+    --amber-dim: #7a5010;
+    --amber-glow: #ffbe4a;
+    --cyan: #28b4c8;
+    --cyan-dim: #0e4a54;
+    --green: #2ecc71;
+    --red: #e74c3c;
+    --text: #c8d8e0;
+    --text-dim: #4a6070;
+    --text-muted: #2a3a48;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--sky);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Star field background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 50% 10%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 80%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 85% 35%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 15% 85%, rgba(255,255,255,0.2) 0%, transparent 100%),
+      radial-gradient(1px 1px at 60% 45%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 40% 90%, rgba(255,255,255,0.2) 0%, transparent 100%),
+      radial-gradient(1px 1px at 92% 60%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 5% 50%, rgba(255,255,255,0.2) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+  }
+
+  /* ── Header ─────────────────────────────────────── */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+    margin-bottom: 32px;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .logo-block h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    letter-spacing: 4px;
+    color: var(--amber);
+    text-shadow: 0 0 30px rgba(232,160,32,0.4);
+    line-height: 1;
+  }
+
+  .logo-block .tagline {
+    font-family: 'Courier Prime', monospace;
+    font-style: italic;
+    color: var(--text-dim);
+    font-size: 12px;
+    letter-spacing: 2px;
+    margin-top: 4px;
+  }
+
+  .version-badge {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  .mission-statement {
+    margin-top: 16px;
+    padding: 12px 16px;
+    border-left: 3px solid var(--amber-dim);
+    background: rgba(232,160,32,0.04);
+    font-family: 'Courier Prime', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    max-width: 680px;
+  }
+
+  /* ── Section headers ─────────────────────────────── */
+  .section-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 3px;
+    color: var(--amber);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--amber-dim), transparent);
+  }
+
+  /* ── Panel ───────────────────────────────────────── */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .panel-title {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--amber-dim);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  /* ── Form grid ───────────────────────────────────── */
+  .field-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+  }
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .field-group label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  .field-group .hint {
+    font-size: 9px;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-top: -3px;
+  }
+
+  input[type="number"], input[type="text"], select, textarea {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--amber-glow);
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    padding: 8px 10px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--amber);
+    box-shadow: 0 0 0 1px rgba(232,160,32,0.2);
+  }
+
+  select option { background: var(--panel2); color: var(--text); }
+
+  textarea { resize: vertical; min-height: 80px; font-size: 12px; color: var(--text); }
+
+  /* ── Compute button ──────────────────────────────── */
+  .btn-compute {
+    background: transparent;
+    border: 1px solid var(--amber);
+    color: var(--amber);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 4px;
+    padding: 12px 32px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: block;
+    width: 100%;
+    margin-top: 20px;
+  }
+
+  .btn-compute:hover {
+    background: rgba(232,160,32,0.08);
+    box-shadow: 0 0 20px rgba(232,160,32,0.2);
+  }
+
+  .btn-compute:active { transform: scale(0.99); }
+
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 8px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-secondary:hover { border-color: var(--cyan); color: var(--cyan); }
+
+  /* ── Results panel ───────────────────────────────── */
+  #results-panel {
+    display: none;
+    animation: fadeSlide 0.4s ease;
+  }
+
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .result-card {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    padding: 14px;
+  }
+
+  .result-card .rc-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .result-card .rc-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--amber-glow);
+    line-height: 1;
+    text-shadow: 0 0 12px rgba(255,190,74,0.3);
+  }
+
+  .result-card .rc-unit {
+    font-size: 11px;
+    color: var(--amber-dim);
+    margin-top: 2px;
+  }
+
+  .result-card.highlight {
+    border-color: var(--amber-dim);
+    background: rgba(232,160,32,0.05);
+  }
+
+  .result-card.cyan-card .rc-value { color: var(--cyan); text-shadow: 0 0 12px rgba(40,180,200,0.3); }
+  .result-card.cyan-card { border-color: var(--cyan-dim); }
+
+  /* ── Triangulation panel ─────────────────────────── */
+  .tri-viz {
+    position: relative;
+    height: 200px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    margin-bottom: 16px;
+    background: linear-gradient(to bottom, #080c14 0%, #0a1020 60%, #0d1525 100%);
+  }
+
+  .tri-viz canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* ── Confidence meter ────────────────────────────── */
+  .confidence-bar-wrap {
+    margin: 12px 0;
+  }
+
+  .conf-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+
+  .conf-bar {
+    height: 6px;
+    background: var(--text-muted);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .conf-fill {
+    height: 100%;
+    background: linear-gradient(to right, var(--amber-dim), var(--amber-glow));
+    transition: width 0.8s ease;
+    box-shadow: 0 0 8px rgba(232,160,32,0.4);
+  }
+
+  /* ── Methodology notes ───────────────────────────── */
+  .method-note {
+    background: rgba(40,180,200,0.04);
+    border: 1px solid var(--cyan-dim);
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    font-family: 'Courier Prime', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    color: #8ab8c8;
+  }
+
+  .method-note strong {
+    color: var(--cyan);
+    letter-spacing: 1px;
+    font-size: 10px;
+    text-transform: uppercase;
+  }
+
+  /* ── Report output ───────────────────────────────── */
+  #report-output {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    padding: 16px;
+    font-family: 'Courier Prime', monospace;
+    font-size: 11px;
+    line-height: 1.8;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+    display: none;
+    max-height: 360px;
+    overflow-y: auto;
+  }
+
+  /* ── Error ───────────────────────────────────────── */
+  .error-msg {
+    color: var(--red);
+    font-size: 11px;
+    margin-top: 8px;
+    display: none;
+  }
+
+  /* ── Sky type selector ───────────────────────────── */
+  .sky-type-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .sky-type-btn {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    line-height: 1.4;
+  }
+
+  .sky-type-btn:hover { border-color: var(--amber-dim); }
+  .sky-type-btn.active { border-color: var(--amber); color: var(--amber); background: rgba(232,160,32,0.07); }
+
+  /* ── Angle input visual ──────────────────────────── */
+  .elev-visual {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .elev-arc {
+    width: 56px;
+    height: 28px;
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 28px 28px 0 0;
+    position: relative;
+    overflow: visible;
+    flex-shrink: 0;
+  }
+
+  #elev-needle {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 2px;
+    height: 24px;
+    background: var(--amber);
+    transform-origin: bottom center;
+    transform: translateX(-50%) rotate(0deg);
+    transition: transform 0.3s ease;
+    box-shadow: 0 0 6px rgba(232,160,32,0.5);
+  }
+
+  /* ── Tabs ────────────────────────────────────────── */
+  .tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab-btn {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-dim);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: -1px;
+  }
+
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--amber); border-bottom-color: var(--amber); }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ── Uncertainty table ───────────────────────────── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+
+  td, th {
+    padding: 8px 10px;
+    border: 1px solid var(--text-muted);
+    text-align: left;
+  }
+
+  th {
+    background: var(--panel2);
+    color: var(--amber-dim);
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: normal;
+  }
+
+  tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+  /* ── Altitude Reference Ladder ───────────────────── */
+  .alt-ladder {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+  }
+
+  .alt-ladder-inner {
+    position: relative;
+    min-width: 520px;
+  }
+
+  .alt-scale {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .alt-band {
+    display: grid;
+    grid-template-columns: 90px 6px 1fr;
+    align-items: center;
+    gap: 0 10px;
+    min-height: 36px;
+    border-bottom: 1px solid var(--text-muted);
+    padding: 4px 0;
+    transition: background 0.15s;
+  }
+
+  .alt-band:hover { background: rgba(232,160,32,0.04); }
+
+  .alt-band.band-ground    { border-bottom-color: rgba(255,255,255,0.15); }
+  .alt-band.band-human     { --band-color: #5a8a6a; }
+  .alt-band.band-infra     { --band-color: #4a90a4; }
+  .alt-band.band-tower     { --band-color: #e8a020; }
+  .alt-band.band-building  { --band-color: #9a7040; }
+  .alt-band.band-sky       { --band-color: #5060c0; }
+  .alt-band.band-aviation  { --band-color: #28b4c8; }
+  .alt-band.band-high      { --band-color: #c050a0; }
+  .alt-band.band-space     { --band-color: #e04040; }
+
+  .alt-height {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 14px;
+    color: var(--band-color, var(--amber));
+    text-align: right;
+    white-space: nowrap;
+    line-height: 1.2;
+  }
+
+  .alt-height small {
+    display: block;
+    font-family: 'Space Mono', monospace;
+    font-size: 8px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+  }
+
+  .alt-pip {
+    width: 6px;
+    align-self: stretch;
+    background: var(--band-color, var(--amber));
+    opacity: 0.7;
+    border-radius: 3px;
+    min-height: 20px;
+  }
+
+  .alt-desc {
+    font-size: 11px;
+    color: var(--text);
+    line-height: 1.4;
+  }
+
+  .alt-desc strong {
+    font-size: 10px;
+    color: var(--band-color, var(--amber));
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 1px;
+  }
+
+  .alt-desc .note {
+    font-size: 9px;
+    color: var(--text-dim);
+    font-family: 'Courier Prime', monospace;
+    font-style: italic;
+  }
+
+  .ladder-divider {
+    grid-column: 1 / -1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--border), transparent);
+    margin: 6px 0;
+  }
+
+  /* ── Scrollbar ───────────────────────────────────── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--panel); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--amber-dim); }
+
+  /* ── Footer ──────────────────────────────────────── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+    margin-top: 40px;
+    font-size: 10px;
+    color: var(--text-muted);
+    line-height: 1.8;
+    font-family: 'Courier Prime', monospace;
+  }
+
+  footer a { color: var(--text-dim); }
+
+  @media (max-width: 600px) {
+    .logo-block h1 { font-size: 36px; }
+    .field-grid { grid-template-columns: 1fr; }
+    .result-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-top">
+      <div class="logo-block">
+        <h1>SkyAnchor</h1>
+        <div class="tagline">CLOUD TRIANGULATION · AERIAL OBSERVATION SCIENCE · OPEN METHODOLOGY</div>
+      </div>
+      <div class="version-badge">v0.1 · PUBLIC DOMAIN METHODOLOGY</div>
+    </div>
+    <div class="mission-statement">
+      Free scientific methodology for sky observers. Cloud base height from surface thermodynamics. 
+      Angular elevation + known reference geometry = estimated object altitude. 
+      No paywalls. No speculation laundering. Just physics and rigorous field notes.
+    </div>
+  </header>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('observe')">I. Observation</button>
+    <button class="tab-btn" onclick="switchTab('triangulate')">II. Triangulate</button>
+    <button class="tab-btn" onclick="switchTab('report')">III. Report</button>
+    <button class="tab-btn" onclick="switchTab('method')">IV. Methodology</button>
+  </div>
+
+  <!-- ═══════════ TAB 1: OBSERVATION ═══════════ -->
+  <div class="tab-content active" id="tab-observe">
+
+    <div class="section-label">Observer Location Anchor</div>
+    <div class="panel" id="gps-panel">
+      <div class="panel-title">// GPS REFERENCE — AUTOFILLS LOCATION, ELEVATION, TIME · OPTIONAL BUT RECOMMENDED</div>
+      <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <div style="font-size:11px;color:var(--text-dim);line-height:1.7;margin-bottom:12px">
+            Your GPS coordinates anchor the report to a verifiable ground position. 
+            Elevation auto-fills from the geolocation API. Coordinates are stored only in your 
+            browser — never transmitted. You control what goes in the report.
+          </div>
+          <button class="btn-compute" style="margin-top:0;font-size:15px;padding:10px 20px" onclick="requestGPS()">
+            ⊕ GET MY LOCATION
+          </button>
+          <div id="gps-status" style="margin-top:10px;font-size:10px;color:var(--text-dim);letter-spacing:1px;font-family:'Courier Prime',monospace;font-style:italic">
+            Awaiting location request...
+          </div>
+        </div>
+        <div style="flex:2;min-width:260px">
+          <div class="field-grid" style="grid-template-columns:1fr 1fr">
+            <div class="field-group">
+              <label>Latitude</label>
+              <input type="text" id="gps-lat" placeholder="— not yet acquired" readonly style="color:var(--text-dim)">
+            </div>
+            <div class="field-group">
+              <label>Longitude</label>
+              <input type="text" id="gps-lon" placeholder="— not yet acquired" readonly style="color:var(--text-dim)">
+            </div>
+            <div class="field-group">
+              <label>GPS Elevation (m)</label>
+              <input type="text" id="gps-alt-raw" placeholder="—" readonly style="color:var(--text-dim)">
+            </div>
+            <div class="field-group">
+              <label>GPS Accuracy</label>
+              <input type="text" id="gps-accuracy" placeholder="—" readonly style="color:var(--text-dim)">
+            </div>
+            <div class="field-group">
+              <label>Fix Timestamp</label>
+              <input type="text" id="gps-timestamp" placeholder="—" readonly style="color:var(--text-dim)">
+            </div>
+            <div class="field-group">
+              <label>Approx. Location</label>
+              <input type="text" id="gps-place" placeholder="—" readonly style="color:var(--text-dim)">
+            </div>
+          </div>
+          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn-secondary" id="gps-apply-btn" onclick="applyGPSToForm()" style="display:none">
+              [ APPLY TO FORM ]
+            </button>
+            <button class="btn-secondary" id="gps-clear-btn" onclick="clearGPS()" style="display:none">
+              [ CLEAR ]
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">Atmospheric Conditions</div>
+    <div class="panel">
+      <div class="panel-title">// SURFACE THERMODYNAMICS — REQUIRED FOR CLOUD BASE ESTIMATE</div>
+      <div class="field-grid">
+        <div class="field-group">
+          <label>Air Temperature</label>
+          <div class="hint">At ground / observer level</div>
+          <input type="number" id="temp" placeholder="e.g. 72" step="0.1" oninput="computeLive()">
+        </div>
+        <div class="field-group">
+          <label>Dew Point</label>
+          <div class="hint">From weather station or app</div>
+          <input type="number" id="dewpt" placeholder="e.g. 55" step="0.1" oninput="computeLive()">
+        </div>
+        <div class="field-group">
+          <label>Units</label>
+          <select id="units" onchange="computeLive()">
+            <option value="F">°F / feet</option>
+            <option value="C">°C / meters</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>Station Elevation</label>
+          <div class="hint">Your elevation above sea level</div>
+          <input type="number" id="elev" placeholder="0" step="1" value="0" oninput="computeLive()">
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">Sky Observation</div>
+    <div class="panel">
+      <div class="panel-title">// CLOUD TYPE & COVER — AFFECTS CONFIDENCE WEIGHT</div>
+
+      <div class="field-group" style="margin-bottom:16px">
+        <label>Predominant Cloud Type</label>
+        <div class="sky-type-grid" id="cloud-type-grid">
+          <button class="sky-type-btn" onclick="selectCloudType(this,'Cumulus')">Cumulus<br><span style="font-size:9px;opacity:0.6">puffy / fair weather</span></button>
+          <button class="sky-type-btn" onclick="selectCloudType(this,'Cumulonimbus')">Cumulonimbus<br><span style="font-size:9px;opacity:0.6">towering / storm</span></button>
+          <button class="sky-type-btn" onclick="selectCloudType(this,'Stratus')">Stratus<br><span style="font-size:9px;opacity:0.6">flat / overcast</span></button>
+          <button class="sky-type-btn" onclick="selectCloudType(this,'Altocumulus')">Altocumulus<br><span style="font-size:9px;opacity:0.6">mid-level patches</span></button>
+          <button class="sky-type-btn" onclick="selectCloudType(this,'Cirrus')">Cirrus<br><span style="font-size:9px;opacity:0.6">high wispy ice</span></button>
+          <button class="sky-type-btn" onclick="selectCloudType(this,'None / Clear')">None / Clear<br><span style="font-size:9px;opacity:0.6">no cloud cover</span></button>
+          <button class="sky-type-btn" onclick="selectCloudType(this,'Unknown')">Unknown<br><span style="font-size:9px;opacity:0.6">uncertain</span></button>
+        </div>
+      </div>
+
+      <div class="field-grid">
+        <div class="field-group">
+          <label>Cloud Cover Estimate</label>
+          <select id="cloud-cover">
+            <option value="0">SKC — Clear (0/8)</option>
+            <option value="1">FEW (1–2/8)</option>
+            <option value="3">SCT — Scattered (3–4/8)</option>
+            <option value="5">BKN — Broken (5–7/8)</option>
+            <option value="8">OVC — Overcast (8/8)</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>Visibility Estimate</label>
+          <select id="visibility">
+            <option value="10+">10+ miles / exceptional</option>
+            <option value="6-10">6–10 miles / good</option>
+            <option value="3-6">3–6 miles / moderate</option>
+            <option value="1-3">1–3 miles / reduced</option>
+            <option value="<1">Under 1 mile / poor</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>Time (Local)</label>
+          <input type="text" id="obs-time" placeholder="14:32 or 2:32 PM">
+        </div>
+        <div class="field-group">
+          <label>Date</label>
+          <input type="text" id="obs-date" placeholder="2025-06-12">
+        </div>
+      </div>
+    </div>
+
+    <div id="results-panel">
+      <div class="section-label">Computed Cloud Base</div>
+      <div class="result-grid">
+        <div class="result-card highlight">
+          <div class="rc-label">Cloud Base AGL</div>
+          <div class="rc-value" id="r-agl">—</div>
+          <div class="rc-unit" id="r-agl-unit">feet above ground</div>
+        </div>
+        <div class="result-card">
+          <div class="rc-label">Cloud Base MSL</div>
+          <div class="rc-value" id="r-msl">—</div>
+          <div class="rc-unit" id="r-msl-unit">feet MSL</div>
+        </div>
+        <div class="result-card cyan-card">
+          <div class="rc-label">Temp-Dewpoint Spread</div>
+          <div class="rc-value" id="r-spread">—</div>
+          <div class="rc-unit" id="r-spread-unit">°F spread</div>
+        </div>
+        <div class="result-card">
+          <div class="rc-label">LCL Method (±5%)</div>
+          <div class="rc-value" id="r-lcl">—</div>
+          <div class="rc-unit" id="r-lcl-unit">feet AGL</div>
+        </div>
+      </div>
+
+      <div class="confidence-bar-wrap">
+        <div class="conf-label">
+          <span>Estimate Confidence</span>
+          <span id="conf-pct">—</span>
+        </div>
+        <div class="conf-bar"><div class="conf-fill" id="conf-fill" style="width:0%"></div></div>
+      </div>
+
+      <div class="method-note">
+        <strong>Formula Used:</strong> Standard LCL (Lifting Condensation Level)<br>
+        Fahrenheit: H_agl = [(T − T_d) ÷ 4.4] × 1,000 ft&nbsp;&nbsp;|&nbsp;&nbsp;
+        Celsius: H_agl = [(T − T_d) ÷ 2.5] × 1,000 ft<br>
+        Source rate: ~5.4°F/1,000ft dry adiabatic lapse + ~1.0°F/1,000ft dewpoint decrease → net 4.4°F/1,000ft spread closure.
+        Valid primarily for convective cumulus-family clouds under standard tropospheric conditions. 
+        Accuracy degrades near fronts, inversions, or marine layers.
+      </div>
+      <div class="error-msg" id="error-msg"></div>
+    </div>
+
+    <div class="field-group" style="margin-top:20px">
+      <label>Observer Notes (weather, anomalies, context)</label>
+      <textarea id="obs-notes" placeholder="Describe atmospheric conditions, any unusual phenomena, reference landmarks, equipment used..."></textarea>
+    </div>
+
+  </div>
+
+  <!-- ═══════════ TAB 2: TRIANGULATION ═══════════ -->
+  <div class="tab-content" id="tab-triangulate">
+
+    <div class="method-note">
+      <strong>Principle:</strong> If you observe an object at a measurable elevation angle above the horizon, 
+      and you know (or can estimate) the cloud base height, you can establish a lower/upper altitude bound 
+      by comparing whether the object appears above or below the cloud deck. With elevation angle and 
+      distance-to-reference, basic trigonometry yields estimated altitude. Two observers separated by 
+      a known baseline enable true geometric triangulation.
+    </div>
+
+    <div class="section-label">Observed Object / Phenomenon</div>
+    <div class="panel">
+      <div class="panel-title">// ANGULAR OBSERVATION — SINGLE OBSERVER</div>
+      <div class="field-grid">
+        <div class="field-group">
+          <label>Elevation Angle</label>
+          <div class="hint">0° = horizon, 90° = zenith</div>
+          <input type="number" id="elev-angle" min="0" max="90" placeholder="e.g. 35" oninput="updateNeedle(); triCompute()">
+          <div class="elev-visual">
+            <div class="elev-arc"><div id="elev-needle"></div></div>
+            <span id="elev-label" style="font-size:10px;color:var(--text-dim)">— degrees</span>
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Azimuth / Bearing</label>
+          <div class="hint">Degrees from true North (0–360)</div>
+          <input type="number" id="azimuth" min="0" max="360" placeholder="e.g. 225 = SW">
+        </div>
+        <div class="field-group">
+          <label>Angular Size</label>
+          <div class="hint">Compare to moon (0.5°), fist at arm (10°)</div>
+          <input type="number" id="ang-size" step="0.1" placeholder="e.g. 0.5" oninput="triCompute()">
+        </div>
+        <div class="field-group">
+          <label>Observation Duration</label>
+          <input type="text" id="duration" placeholder="e.g. 12 seconds">
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">// DISTANCE / REFERENCE GEOMETRY — FOR ALTITUDE ESTIMATE</div>
+      <div class="field-grid">
+        <div class="field-group">
+          <label>Horizontal Distance to Object</label>
+          <div class="hint">If known or estimated</div>
+          <input type="number" id="horiz-dist" placeholder="e.g. 5" oninput="triCompute()">
+        </div>
+        <div class="field-group">
+          <label>Distance Units</label>
+          <select id="dist-units" onchange="triCompute()">
+            <option value="miles">miles</option>
+            <option value="km">kilometers</option>
+            <option value="ft">feet</option>
+            <option value="m">meters</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>Known Cloud Base AGL</label>
+          <div class="hint">From Section I — auto-fills if computed</div>
+          <input type="number" id="tri-cloud-base" placeholder="auto" id="tri-cloud-base" oninput="triCompute()">
+        </div>
+        <div class="field-group">
+          <label>Object Position vs Cloud Deck</label>
+          <select id="cloud-relation" onchange="triCompute()">
+            <option value="unknown">Unknown / No cloud deck</option>
+            <option value="below">Clearly below clouds</option>
+            <option value="at">Approximately at cloud level</option>
+            <option value="above">Clearly above clouds</option>
+            <option value="through">Appeared to pass through / enter cloud</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div id="tri-results" style="display:none">
+      <div class="section-label">Triangulation Output</div>
+      <div class="result-grid">
+        <div class="result-card highlight">
+          <div class="rc-label">Estimated Altitude AGL</div>
+          <div class="rc-value" id="t-alt">—</div>
+          <div class="rc-unit" id="t-alt-unit">feet</div>
+        </div>
+        <div class="result-card">
+          <div class="rc-label">Altitude MSL</div>
+          <div class="rc-value" id="t-msl">—</div>
+          <div class="rc-unit">feet MSL</div>
+        </div>
+        <div class="result-card cyan-card">
+          <div class="rc-label">Cloud Constraint</div>
+          <div class="rc-value" id="t-constraint" style="font-size:16px;margin-top:4px">—</div>
+          <div class="rc-unit" id="t-constraint-note" style="font-size:10px;color:var(--text-dim)"></div>
+        </div>
+        <div class="result-card">
+          <div class="rc-label">Est. Physical Size</div>
+          <div class="rc-value" id="t-size">—</div>
+          <div class="rc-unit" id="t-size-unit">feet across</div>
+        </div>
+      </div>
+
+      <div class="tri-viz">
+        <canvas id="tri-canvas"></canvas>
+      </div>
+
+      <div class="method-note">
+        <strong>Trig Used:</strong> H_agl = D_horiz × tan(θ_elevation) + H_observer<br>
+        Physical size = 2 × D_slant × tan(θ_angular / 2)&nbsp;&nbsp;where D_slant = D_horiz / cos(θ_elevation)<br>
+        <strong>Cloud constraint:</strong> If object is reported below confirmed cloud base, altitude is bounded above by the LCL height. 
+        If above, altitude is bounded below by cloud base. "Entered cloud" sets a precise altitude bracket.
+      </div>
+
+      <div class="panel" style="margin-top:16px">
+        <div class="panel-title">// TWO-OBSERVER BASELINE TRIANGULATION</div>
+        <div class="method-note" style="margin-bottom:12px">
+          <strong>For highest accuracy:</strong> Two observers at a known separation (baseline) both measuring 
+          elevation angle to the same object yield altitude via: H = B × tan(α) × tan(β) / (tan(α) + tan(β))
+          where B is baseline distance, α and β are elevation angles from each observer.
+          Requires coordination and accurate GPS positions.
+        </div>
+        <div class="field-grid">
+          <div class="field-group">
+            <label>Observer 2 — Elevation Angle</label>
+            <input type="number" id="obs2-elev" placeholder="e.g. 28" min="0" max="90" oninput="baselineCompute()">
+          </div>
+          <div class="field-group">
+            <label>Baseline Distance Between Observers</label>
+            <input type="number" id="baseline" placeholder="e.g. 2.5 miles" oninput="baselineCompute()">
+          </div>
+          <div class="field-group">
+            <label>Baseline Units</label>
+            <select id="baseline-units" onchange="baselineCompute()">
+              <option value="miles">miles</option>
+              <option value="km">kilometers</option>
+            </select>
+          </div>
+        </div>
+        <div id="baseline-result" style="margin-top:12px;display:none">
+          <div class="result-card highlight" style="display:inline-block;min-width:220px">
+            <div class="rc-label">Two-Observer Altitude AGL</div>
+            <div class="rc-value" id="b-alt">—</div>
+            <div class="rc-unit" id="b-unit">feet</div>
+          </div>
+          <div style="margin-top:10px;font-size:11px;color:var(--text-dim)">
+            Geometric method — independent of distance estimate. More robust when observers are well-separated (baseline ≥ 1/3 of expected altitude).
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-group" style="margin-top:20px">
+      <label>Object Description</label>
+      <textarea id="obj-description" placeholder="Shape, color, luminosity, motion pattern, sound, any distinguishing characteristics. Be specific and avoid interpretive language — describe only what was observed directly."></textarea>
+    </div>
+
+    <!-- ALTITUDE REFERENCE LADDER -->
+    <div class="section-label" style="margin-top:28px">Altitude Reference Ladder</div>
+    <div class="method-note" style="margin-bottom:14px">
+      <strong>How to use:</strong> Find the band that matches your estimated altitude. Known structures 
+      provide hard anchors — if an object appeared at the same height as a nearby cell tower or 
+      building you can identify, that collapses your altitude uncertainty dramatically. 
+      Use these as cross-checks against your trigonometric estimate above.
+    </div>
+
+    <div class="alt-ladder">
+      <div class="alt-ladder-inner">
+        <div class="alt-scale">
+
+          <!-- HUMAN SCALE -->
+          <div class="alt-band band-human">
+            <div class="alt-height">5–6 ft<small>1.5–1.8 m</small></div>
+            <div class="alt-pip"></div>
+            <div class="alt-desc"><strong>Human / Eye Level</strong>Standing adult. Your observation baseline.<span class="note">Reference zero for elevation angle measurements</span></div>
+          </div>
+          <div class="alt-band band-human">
+            <div class="alt-height">10–20 ft<small>3–6 m</small></div>
+            <div class="alt-pip"></div>
+            <div class="alt-desc"><strong>Single Story / Utility Pole</strong>Standard residential roof, streetlight, 5G small cell node on pole<span class="note">5G small cells: ~20 ft on utility poles — lowest telecom infrastructure</span></div>
+          </div>
+
+          <!-- INFRASTRUCTURE -->
+          <div class="alt-band band-infra">
+            <div class="alt-height">30–50 ft<small>9–15 m</small></div>
+            <div class="alt-pip"></div>
+            <div class="alt-desc"><strong>3–4 Story Building / Small Cell Max</strong>Typical small commercial building, FCC cap for small wireless facilities (~50 ft)<span class="note">3 stories ≈ 36 ft / 4 stories ≈ 48 ft (10–12 ft floor-to-floor)</span></div>
+          </div>
+          <div class="alt-band band-infra">
+            <div class="alt-height">50–100 ft<small>15–30 m</small></div>
+            <div class="alt-pip"></div>
+            <div class="alt-desc"><strong>5–8 Story Building / Macro Cell Low End</small></strong>Mid-rise residential, standard cell tower minimum, 5G macro tower range begins<span class="note">FCC: macro cell towers typically 50–200 ft. 7 stories ≈ 84 ft</span></div>
+          </div>
+
+          <!-- TOWER RANGE -->
+          <div class="alt-band band-tower">
+            <div class="alt-height">150–200 ft<small>46–61 m</small></div>
+            <div class="alt-pip"></div>
+            <div class="alt-desc"><strong>Typical 4G/5G Macro Tower — Core Range</strong>Most common macro tower height. FAA lighting threshold at 200 ft. Water towers, grain elevators<span class="note">Towers often stop at 199 ft to avoid mandatory FAA beacon lighting requirement</span></div>
+          </div>
+          <div class="alt-band band-tower">
+            <div class="alt-height">300–400 ft<small>91–122 m</small></div>
+            <div class="alt-pip"></div>
+            <div class="alt-desc"><strong>Tall Macro Cell Tower / Rural High Reach</strong>Maximum traditional cell tower height. Reach: up to 25–40 miles rural. FAA-lit required<span class="note">300 ft towers preferred when FAA lighting burden is worth the signal gain</span></div>
+          </div>
+
+          <!-- MONUMENTS & LANDMARKS -->
+          <div class="alt-band band-building">
+            <div class="alt-height">555 ft<small>169 m</small></div>
+            <div class="alt-pip"></div>
+            <div class="alt-desc"><strong>Washington Monument</strong>Tallest masonry structure in the world. Hard well-known landmark anchor<span class="note">Still visible and identifiable from ~10 miles on clear day</span></div>
+          </div>
+          <div class="alt-band band-building">
+            <div class="alt-height">630 ft<small>192 m</small></div>
+            <div class="alt-pip"></div>
+            <div class="alt-desc"><strong>Gateway Arch (St. Louis)</strong>Widest span = equal to height. Distinctive parabola profile<span class="note">Useful because shape is unmistakable — unambiguous height reference</span></div>
+          </div>
+          <div class="alt-band band-building">
+            <div class="alt-height">984 ft<small>300 m</small></div>
+            <div class="alt-pip"></div>
+            <div class="alt-desc"><strong>Eiffel Tower (with antenna)</strong>Global icon; clean measurement reference for skyscraper comparison<span class="note">Without antenna tip: 1,063 ft / 324 m to current top</span></div>
+          </div>
+
+          <!-- SKYSCRAPERS -->
+          <div class="alt-band band-sky">
+            <div class="alt-height">1,000–1,500 ft<small>305–457 m</small></div>
+            <div class="alt-pip"></div>
+            <div class="alt-desc"><strong>Major Skyscraper Range</strong>Empire State (1,454 ft), Chrysler (1,046 ft), Salesforce Tower SF (1,070 ft)<span class="note">Objects at this altitude are definitively aircraft or higher infrastructure</span></div>
+          </div>
+          <div class="alt-band band-sky">
+            <div class="alt-height">1,776 ft<small>541 m</small></div>
+            <div class="alt-pip"></div>
+            <div class="alt-desc"><strong>One World Trade Center</strong>Tallest building in Western Hemisphere. Intentional symbolic height.<span class="note">Tip of spire. Architectural roof: 1,368 ft / 417 m</span></div>
+          </div>
+          <div class="alt-band band-sky">
+            <div class="alt-height">2,717 ft<small>828 m</small></div>
+            <div class="alt-pip"></div>
+            <div class="alt-desc"><strong>Burj Khalifa (World's Tallest Building)</strong>Absolute upper bound for built vertical structures on Earth<span class="note">Anything above this height is airborne, period.</span></div>
+          </div>
+
+          <!-- AVIATION -->
+          <div class="alt-band band-aviation">
+            <div class="alt-height">~1,000 ft AGL<small>~305 m</small></div>
+            <div class="alt-pip"></div>
+            <div class="alt-desc"><strong>FAA VFR Traffic Pattern Altitude</strong>Small aircraft fly traffic patterns at ~1,000 ft AGL. Low-flying aircraft baseline<span class="note">Anything at or above this altitude has high probability of being aircraft</span></div>
+          </div>
+          <div class="alt-band band-aviation">
+            <div class="alt-height">500–3,000 ft<small>150–915 m</small></div>
+            <div class="alt-pip"></div>
+            <div class="alt-desc"><strong>Low Airspace / Helicopter / Drone</strong>FAA Part 107 drone ceiling: 400 ft AGL. Helicopter typical ops: 500–2,000 ft<span class="note">Hobbyist drones legally capped at 400 ft AGL without waiver</span></div>
+          </div>
+          <div class="alt-band band-aviation">
+            <div class="alt-height">10,000–35,000 ft<small>3–10.7 km</small></div>
+            <div class="alt-pip"></div>
+            <div class="alt-desc"><strong>Commercial Aviation Cruise / Cloud Ceiling</strong>Typical commercial cruise: FL310–FL410 (31,000–41,000 ft). Cumulus tops to ~35,000 ft<span class="note">Cumulonimbus anvil tops: up to 60,000 ft in tropics</span></div>
+          </div>
+
+          <!-- HIGH ALTITUDE -->
+          <div class="alt-band band-high">
+            <div class="alt-height">60,000–80,000 ft<small>18–24 km</small></div>
+            <div class="alt-pip"></div>
+            <div class="alt-desc"><strong>High Altitude / Stratosphere / U-2 / SR-71 / Weather Balloon</strong>Stratospheric aircraft, high-altitude weather balloons, upper atmospheric phenomena<span class="note">Noctilucent clouds: ~50 miles / 264,000 ft. Visible after sunset.</span></div>
+          </div>
+          <div class="alt-band band-high">
+            <div class="alt-height">~328,000 ft<small>~100 km</small></div>
+            <div class="alt-pip"></div>
+            <div class="alt-desc"><strong>Kármán Line — Edge of Space (Conventional)</strong>Internationally recognized boundary between atmosphere and outer space<span class="note">FAA/US military definition varies: 50 miles / 264,000 ft (80 km)</span></div>
+          </div>
+
+          <!-- SPACE / ORBIT -->
+          <div class="alt-band band-space">
+            <div class="alt-height">250–400 mi<small>400–640 km</small></div>
+            <div class="alt-pip"></div>
+            <div class="alt-desc"><strong>Low Earth Orbit — ISS / Starlink</strong>ISS orbits ~250 miles. Starlink constellation: ~340 miles. Visible to naked eye at dusk/dawn<span class="note">ISS magnitude ~-4 — brighter than Venus. Starlink trains visible as moving chain of lights</span></div>
+          </div>
+          <div class="alt-band band-space">
+            <div class="alt-height">22,236 mi<small>35,786 km</small></div>
+            <div class="alt-pip"></div>
+            <div class="alt-desc"><strong>Geostationary Orbit — Weather / GPS Satellites</strong>GPS constellation at ~12,550 miles. NOAA GOES weather satellites at ~22,000 miles<span class="note">Everything in orbit is technically "visible" with sufficient magnification</span></div>
+          </div>
+
+        </div>
+      </div>
+    </div><!-- end alt-ladder -->
+
+  </div>
+
+  <!-- ═══════════ TAB 3: REPORT ═══════════ -->
+  <div class="tab-content" id="tab-report">
+
+    <div class="method-note" style="margin-bottom:20px">
+      <strong>Report Philosophy:</strong> A scientific field report records what was observed and measured — 
+      not what it was. Altitude constraints, angular data, and atmospheric conditions let future analysis 
+      discriminate between hypotheses. Speculation is labeled as such. Reproducibility and precision over narrative.
+    </div>
+
+    <div class="section-label">Observer Information</div>
+    <div class="panel">
+      <div class="field-grid">
+        <div class="field-group">
+          <label>Observer ID / Callsign</label>
+          <div class="hint">Can be anonymous</div>
+          <input type="text" id="observer-id" placeholder="OBS-7734 or leave blank">
+        </div>
+        <div class="field-group">
+          <label>Location (General)</label>
+          <div class="hint">City/region or lat-lon</div>
+          <input type="text" id="obs-location" placeholder="e.g. NE Oklahoma / 36.1°N 95.8°W">
+        </div>
+        <div class="field-group">
+          <label>Equipment Used</label>
+          <input type="text" id="equipment" placeholder="naked eye, binoculars 10x50, phone camera...">
+        </div>
+        <div class="field-group">
+          <label>Weather Source</label>
+          <div class="hint">Where you got temp/dew point</div>
+          <input type="text" id="wx-source" placeholder="e.g. Weather.gov METAR, personal station">
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-compute" onclick="generateReport()">⟶ GENERATE SCIENTIFIC REPORT</button>
+
+    <div style="margin-top:20px" id="report-section" style="display:none">
+      <div class="section-label">Generated Report</div>
+      <pre id="report-output"></pre>
+      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn-secondary" onclick="copyReport()">[ COPY TO CLIPBOARD ]</button>
+        <button class="btn-secondary" onclick="downloadReport()">[ DOWNLOAD .TXT ]</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════ TAB 4: METHODOLOGY ═══════════ -->
+  <div class="tab-content" id="tab-method">
+
+    <div class="section-label">Scientific Basis</div>
+
+    <div class="method-note">
+      <strong>Cloud Base Altitude — The Physics</strong><br><br>
+      Unsaturated air rising through the atmosphere cools at the dry adiabatic lapse rate (DALR) of 
+      approximately 5.4°F per 1,000 feet (9.8°C/km). The dew point decreases more slowly — roughly 
+      1.0°F per 1,000 feet (1.8°C/km). The spread between ambient temperature and dew point therefore 
+      closes at approximately 4.4°F per 1,000 feet. The altitude at which spread → 0 is the 
+      Lifting Condensation Level (LCL) — the theoretical cloud base.
+    </div>
+
+    <div class="method-note">
+      <strong>LCL Formula (Standard / Aviation Rule of Thumb):</strong><br>
+      H_agl(ft) = [(T_F − T_d_F) / 4.4] × 1,000<br>
+      H_agl(m) = [(T_C − T_d_C) / 2.5] × 1,247<br><br>
+      <strong>Bolton (1980) More Precise LCL:</strong><br>
+      T_LCL = T / (1 − (T × ln(RH/100) / 2840)) + 55 — gives LCL temperature<br>
+      H_LCL(m) = (T − T_LCL) / 9.8 × 1000 (per 1°C/100m dry adiabatic)<br><br>
+      For citizen science purposes, the standard formula is sufficient at ±200–500 feet 
+      under convective conditions.
+    </div>
+
+    <div class="method-note">
+      <strong>Triangulation Geometry</strong><br><br>
+      Single-observer (range + angle):<br>
+      &nbsp;&nbsp;H_agl = D_horizontal × tan(θ_elevation)<br><br>
+      Physical size from angular diameter:<br>
+      &nbsp;&nbsp;Size = 2 × D_slant × tan(θ_angular / 2)<br>
+      &nbsp;&nbsp;D_slant = D_horizontal / cos(θ_elevation)<br><br>
+      Two-observer baseline (most accurate, no range needed):<br>
+      &nbsp;&nbsp;H = B × [tan(α) × tan(β)] / [tan(α) + tan(β)]<br>
+      &nbsp;&nbsp;where B = baseline distance, α and β = elevation angles from each observer<br><br>
+      The baseline method is mathematically independent of range estimation and 
+      should be preferred when two observers can coordinate.
+    </div>
+
+    <div class="method-note">
+      <strong>Cloud Constraint Method (Unique to This Tool)</strong><br><br>
+      A cloud deck at a known altitude creates an observable upper or lower bound:<br>
+      • Object clearly below cloud base → altitude is LESS THAN computed LCL<br>
+      • Object apparently above or in clouds → altitude is GREATER THAN computed LCL<br>
+      • Object entered / exited cloud edge → altitude approximately EQUALS LCL ± uncertainty<br><br>
+      This constraint is often the most observationally accessible for untrained observers 
+      and should always be recorded, as it provides a constraint independent of 
+      angle/range estimation errors.
+    </div>
+
+    <div class="section-label" style="margin-top:24px">Uncertainty Table</div>
+    <table>
+      <tr>
+        <th>Source</th>
+        <th>Typical Error</th>
+        <th>Notes</th>
+      </tr>
+      <tr><td>Temperature/Dew Point (weather station)</td><td>±1–2°F</td><td>Propagates to ±200–500 ft cloud base error</td></tr>
+      <tr><td>LCL formula (standard)</td><td>±5–10%</td><td>Worse near fronts, inversions, marine layers</td></tr>
+      <tr><td>Elevation angle (naked eye)</td><td>±5–10°</td><td>Use fist (10°), thumb (2°) as references</td></tr>
+      <tr><td>Elevation angle (phone inclinometer)</td><td>±1–3°</td><td>Most accessible tool for observers</td></tr>
+      <tr><td>Range estimate (visual)</td><td>±50%</td><td>Largest uncertainty — baseline method avoids it</td></tr>
+      <tr><td>Angular size (naked eye)</td><td>±30%</td><td>Use moon comparison (0.5°), finger widths</td></tr>
+      <tr><td>Two-observer baseline</td><td>±5–15%</td><td>Dominated by angle measurement precision</td></tr>
+    </table>
+
+    <div class="method-note" style="margin-top:20px">
+      <strong>Reference Angular Sizes (Memorize for Field Use)</strong><br><br>
+      Moon / Sun diameter: ~0.5°<br>
+      Thumbnail at arm's length: ~1°<br>
+      Index finger width at arm's length: ~2°<br>
+      Three fingers at arm's length: ~5°<br>
+      Closed fist at arm's length: ~10°<br>
+      Open hand (pinky to thumb) at arm's length: ~20°<br><br>
+      These are averages — calibrate against known objects (moon, aircraft at known distance) 
+      for personal accuracy baseline.
+    </div>
+
+    <div class="section-label" style="margin-top:24px">Altitude Reference — Quick Table</div>
+    <table>
+      <tr>
+        <th>Altitude (AGL)</th>
+        <th>Structure / Context</th>
+        <th>Observational Significance</th>
+      </tr>
+      <tr><td>~20 ft</td><td>5G small cell node (utility pole)</td><td>Ground infrastructure baseline — lowest telecom</td></tr>
+      <tr><td>30–50 ft</td><td>3–4 story building / FCC small cell cap</td><td>Standard urban mid-rise; FCC regulatory ceiling for small wireless</td></tr>
+      <tr><td>50–100 ft</td><td>5–8 story building; low macro tower</td><td>Cell tower range begins; top of most street-visible infrastructure</td></tr>
+      <tr><td>150–200 ft</td><td>Typical 4G/5G macro tower (core range)</td><td>FAA lighting required above 200 ft — towers cluster below this</td></tr>
+      <tr><td>300–400 ft</td><td>Tall rural cell tower; max traditional range</td><td>Absolute cell tower height ceiling; covers 25–40 mile radius rural</td></tr>
+      <tr><td>555 ft</td><td>Washington Monument</td><td>Tallest masonry structure; universally recognized reference</td></tr>
+      <tr><td>630 ft</td><td>Gateway Arch</td><td>Distinctive shape = unambiguous ID at distance</td></tr>
+      <tr><td>1,000–1,500 ft</td><td>Major skyscrapers (Empire State, etc.)</td><td>Objects here are definitively in airspace, not on structures</td></tr>
+      <tr><td>1,776 ft</td><td>One World Trade Center</td><td>Tallest in Western Hemisphere; deliberate symbolic height</td></tr>
+      <tr><td>2,717 ft</td><td>Burj Khalifa</td><td>Tallest built structure on Earth — hard upper bound for infrastructure</td></tr>
+      <tr><td>400 ft</td><td>FAA Part 107 drone ceiling</td><td>Legal hobbyist drone max without waiver</td></tr>
+      <tr><td>~1,000 ft AGL</td><td>VFR traffic pattern altitude</td><td>Small aircraft standard pattern; likely aircraft if observed here</td></tr>
+      <tr><td>500–2,000 ft</td><td>Helicopter operational range</td><td>Rotorcraft typical low-altitude operations</td></tr>
+      <tr><td>31,000–41,000 ft</td><td>Commercial aviation cruise (FL310–410)</td><td>Airline contrail zone; near cloud tops for most weather systems</td></tr>
+      <tr><td>60,000–80,000 ft</td><td>High-altitude / stratosphere</td><td>Weather balloon burst altitude; U-2/SR-71 territory</td></tr>
+      <tr><td>~328,000 ft (100 km)</td><td>Kármán Line — edge of space</td><td>Internationally recognized space boundary</td></tr>
+      <tr><td>250–400 miles</td><td>ISS / Starlink (LEO)</td><td>Visible naked eye at dusk/dawn; ISS ≈ magnitude −4</td></tr>
+      <tr><td>22,236 miles</td><td>Geostationary orbit (GOES, GPS)</td><td>Stationary over one point; weather satellite imagery originates here</td></tr>
+    </table>
+
+    <div class="method-note" style="margin-top:16px">
+      <strong>Cell Tower Generation Heights — Summary</strong><br><br>
+      5G small cell (mmWave/dense urban): ~20–50 ft on utility poles and streetlights<br>
+      5G/4G macro tower (mid-range): 50–200 ft — typical suburban/urban deployment<br>
+      3G/4G macro tower (rural long-range): 200–400 ft — FAA lit, covers 25–40 miles<br>
+      Rooftop antenna installations: 2–30 ft above host structure (not standalone height)<br><br>
+      Key fact: <em>The 199 ft ceiling is an engineering/economic choice</em>, not a technical limit. 
+      Tower owners stop just below 200 ft to avoid mandatory FAA aviation lighting maintenance costs. 
+      Most of what you see driving through suburban areas is in the 120–199 ft range.
+    </div>
+
+    <div class="method-note">
+      <strong>What This Tool Cannot Do</strong><br><br>
+      • Identify what was observed — that is not science, that is hypothesis<br>
+      • Compensate for optical illusions, perspective effects, or unusual atmospheric refraction<br>
+      • Verify observer accuracy or bias<br>
+      • Replace calibrated instruments (radar, lidar, theodolite)<br><br>
+      What it CAN do: take a raw visual observation and extract the maximum 
+      physically constrained information from it, documented in a format 
+      that other researchers can evaluate and reproduce.
+    </div>
+
+  </div>
+
+  <footer>
+    SkyAnchor — Open methodology, public domain formulas, no proprietary claims.
+    Fork it. Improve it. Put it on GitHub. The sky belongs to everyone who looks up carefully.
+    <br>
+    Formulas: LCL standard (aviation), Bolton 1980, basic trigonometry.
+    Cite as: observational field data with stated uncertainties.
+    Not a substitute for calibrated meteorological instruments.
+  </footer>
+
+</div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────
+let cloudType = '';
+
+// ── Tab switching ─────────────────────────────────────────────
+function switchTab(id) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ── Cloud type selection ──────────────────────────────────────
+function selectCloudType(el, type) {
+  document.querySelectorAll('.sky-type-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  cloudType = type;
+  computeLive();
+}
+
+// ── Cloud base compute ────────────────────────────────────────
+function computeLive() {
+  const T   = parseFloat(document.getElementById('temp').value);
+  const Td  = parseFloat(document.getElementById('dewpt').value);
+  const units = document.getElementById('units').value;
+  const elev  = parseFloat(document.getElementById('elev').value) || 0;
+
+  if (isNaN(T) || isNaN(Td)) {
+    document.getElementById('results-panel').style.display = 'none';
+    return;
+  }
+
+  if (Td > T) {
+    showError('Dew point cannot exceed air temperature.');
+    return;
+  }
+  hideError();
+
+  const spread = T - Td;
+  let h_agl, h_lcl_alt, unit_str, spread_unit;
+
+  if (units === 'F') {
+    h_agl = (spread / 4.4) * 1000;
+    h_lcl_alt = Math.round(h_agl * 0.95); // slight LCL variation
+    unit_str = 'feet';
+    spread_unit = '°F';
+  } else {
+    h_agl = (spread / 2.5) * 1000;
+    h_lcl_alt = Math.round(h_agl * 0.95);
+    unit_str = 'meters';
+    spread_unit = '°C';
+  }
+
+  const h_msl = h_agl + elev;
+
+  document.getElementById('r-agl').textContent     = Math.round(h_agl).toLocaleString();
+  document.getElementById('r-msl').textContent     = Math.round(h_msl).toLocaleString();
+  document.getElementById('r-spread').textContent  = spread.toFixed(1);
+  document.getElementById('r-lcl').textContent     = h_lcl_alt.toLocaleString();
+  document.getElementById('r-agl-unit').textContent  = unit_str + ' above ground';
+  document.getElementById('r-msl-unit').textContent  = unit_str + ' MSL';
+  document.getElementById('r-spread-unit').textContent = spread_unit + ' spread';
+  document.getElementById('r-lcl-unit').textContent   = unit_str + ' AGL';
+
+  // Confidence
+  let conf = 75;
+  if (spread < 2) conf -= 20;
+  if (spread > 15) conf -= 10;
+  if (cloudType === 'Cumulus' || cloudType === 'Cumulonimbus') conf += 15;
+  if (cloudType === 'Stratus' || cloudType === 'Cirrus') conf -= 15;
+  if (cloudType === 'None / Clear') conf = 40;
+  conf = Math.min(92, Math.max(15, conf));
+
+  document.getElementById('conf-fill').style.width = conf + '%';
+  document.getElementById('conf-pct').textContent = conf + '%';
+
+  document.getElementById('results-panel').style.display = 'block';
+
+  // Auto-fill triangulation cloud base
+  document.getElementById('tri-cloud-base').placeholder = Math.round(h_agl).toLocaleString() + ' ' + unit_str;
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent = msg;
+  el.style.display = 'block';
+  document.getElementById('results-panel').style.display = 'none';
+}
+
+function hideError() {
+  document.getElementById('error-msg').style.display = 'none';
+}
+
+// ── Elevation needle ──────────────────────────────────────────
+function updateNeedle() {
+  const ang = parseFloat(document.getElementById('elev-angle').value) || 0;
+  // Convert: 0° = horizontal (needle rotated 90° left from vertical), 90° = vertical
+  const rot = 90 - Math.min(90, Math.max(0, ang));
+  document.getElementById('elev-needle').style.transform = `translateX(-50%) rotate(${rot}deg)`;
+  document.getElementById('elev-label').textContent = ang + '°';
+}
+
+// ── Triangulation compute ─────────────────────────────────────
+function triCompute() {
+  const elevAng  = parseFloat(document.getElementById('elev-angle').value);
+  const horizDist = parseFloat(document.getElementById('horiz-dist').value);
+  const angSize   = parseFloat(document.getElementById('ang-size').value);
+  const distUnits = document.getElementById('dist-units').value;
+  const cloudRel  = document.getElementById('cloud-relation').value;
+  const obsElev   = parseFloat(document.getElementById('elev').value) || 0;
+
+  // Get cloud base
+  const cbInput = document.getElementById('tri-cloud-base').value;
+  const T  = parseFloat(document.getElementById('temp').value);
+  const Td = parseFloat(document.getElementById('dewpt').value);
+  const uF = document.getElementById('units').value === 'F';
+  let cloudBase = parseFloat(cbInput) || ((!isNaN(T) && !isNaN(Td)) ? (uF ? (T-Td)/4.4*1000 : (T-Td)/2.5*1000) : null);
+
+  if (isNaN(elevAng)) return;
+
+  document.getElementById('tri-results').style.display = 'block';
+
+  const elevRad = elevAng * Math.PI / 180;
+  const unit_str = uF ? 'feet' : 'meters';
+
+  // Convert horiz dist to same units as elevation
+  let dHoriz_ft = null;
+  if (!isNaN(horizDist)) {
+    const toFeet = { miles: 5280, km: 3280.84, ft: 1, m: 3.28084 };
+    dHoriz_ft = horizDist * toFeet[distUnits];
+    if (!uF) dHoriz_ft = dHoriz_ft / 3.28084; // convert to meters
+  }
+
+  let altAGL = null, physSize = null;
+  if (dHoriz_ft !== null && elevAng > 0) {
+    altAGL = dHoriz_ft * Math.tan(elevRad);
+    const dSlant = dHoriz_ft / Math.cos(elevRad);
+    if (!isNaN(angSize) && angSize > 0) {
+      const angSizeRad = angSize * Math.PI / 180;
+      physSize = 2 * dSlant * Math.tan(angSizeRad / 2);
+    }
+  }
+
+  // Cloud constraint
+  let constraintText = '—', constraintNote = '';
+  if (cloudBase && cloudRel !== 'unknown') {
+    if (cloudRel === 'below') {
+      constraintText = `< ${Math.round(cloudBase).toLocaleString()}`;
+      constraintNote = unit_str + ' (bounded above by cloud base)';
+    } else if (cloudRel === 'at') {
+      constraintText = `≈ ${Math.round(cloudBase).toLocaleString()}`;
+      constraintNote = unit_str + ' (approximately at LCL)';
+    } else if (cloudRel === 'above') {
+      constraintText = `> ${Math.round(cloudBase).toLocaleString()}`;
+      constraintNote = unit_str + ' (bounded below by cloud base)';
+    } else if (cloudRel === 'through') {
+      constraintText = `~ ${Math.round(cloudBase).toLocaleString()}`;
+      constraintNote = unit_str + ' ± uncertainty (transited cloud boundary)';
+    }
+  }
+
+  document.getElementById('t-alt').textContent    = altAGL ? Math.round(altAGL).toLocaleString() : '—';
+  document.getElementById('t-alt-unit').textContent = unit_str + ' AGL';
+  document.getElementById('t-msl').textContent    = altAGL ? Math.round(altAGL + obsElev).toLocaleString() : '—';
+  document.getElementById('t-constraint').textContent = constraintText;
+  document.getElementById('t-constraint-note').textContent = constraintNote;
+  document.getElementById('t-size').textContent   = physSize ? Math.round(physSize).toLocaleString() : '—';
+  document.getElementById('t-size-unit').textContent = unit_str + ' across';
+
+  drawTriViz(elevAng, altAGL, cloudBase, dHoriz_ft, uF);
+}
+
+// ── Baseline triangulation ────────────────────────────────────
+function baselineCompute() {
+  const ang1   = parseFloat(document.getElementById('elev-angle').value);
+  const ang2   = parseFloat(document.getElementById('obs2-elev').value);
+  const bDist  = parseFloat(document.getElementById('baseline').value);
+  const bUnits = document.getElementById('baseline-units').value;
+  const uF     = document.getElementById('units').value === 'F';
+
+  if (isNaN(ang1) || isNaN(ang2) || isNaN(bDist)) return;
+
+  const b_ft = bDist * (bUnits === 'miles' ? 5280 : 3280.84);
+  const b = uF ? b_ft : b_ft / 3.28084;
+  const a1 = ang1 * Math.PI / 180;
+  const a2 = ang2 * Math.PI / 180;
+  const t1 = Math.tan(a1), t2 = Math.tan(a2);
+
+  const H = b * (t1 * t2) / (t1 + t2);
+
+  document.getElementById('baseline-result').style.display = 'block';
+  document.getElementById('b-alt').textContent = Math.round(H).toLocaleString();
+  document.getElementById('b-unit').textContent = (uF ? 'feet' : 'meters') + ' AGL';
+}
+
+// ── Triangle visualization ────────────────────────────────────
+function drawTriViz(elevAng, altAGL, cloudBase, dHoriz, isFt) {
+  const canvas = document.getElementById('tri-canvas');
+  const W = canvas.parentElement.offsetWidth;
+  const H_c = 200;
+  canvas.width = W;
+  canvas.height = H_c;
+  const ctx = canvas.getContext('2d');
+
+  ctx.clearRect(0, 0, W, H_c);
+
+  // Gradient sky
+  const grad = ctx.createLinearGradient(0, 0, 0, H_c);
+  grad.addColorStop(0, '#050810');
+  grad.addColorStop(1, '#0a1525');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H_c);
+
+  const margin = 40;
+  const groundY = H_c - 30;
+  const maxAlt = cloudBase ? cloudBase * 1.4 : (altAGL ? altAGL * 1.5 : 5000);
+  const scale = (groundY - margin) / maxAlt;
+
+  // Cloud base line
+  if (cloudBase) {
+    const cy = groundY - cloudBase * scale;
+    ctx.setLineDash([4, 6]);
+    ctx.strokeStyle = 'rgba(40, 180, 200, 0.5)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(margin, cy); ctx.lineTo(W - margin, cy);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(40,180,200,0.7)';
+    ctx.font = '9px Space Mono';
+    ctx.fillText('CLOUD BASE ~' + Math.round(cloudBase).toLocaleString() + (isFt ? 'ft' : 'm'), margin + 4, cy - 4);
+  }
+
+  // Ground
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(margin, groundY); ctx.lineTo(W - margin, groundY);
+  ctx.stroke();
+
+  // Observer dot
+  const obsX = margin + 20;
+  ctx.fillStyle = '#e8a020';
+  ctx.beginPath();
+  ctx.arc(obsX, groundY, 5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(232,160,32,0.5)';
+  ctx.font = '9px Space Mono';
+  ctx.fillText('OBS', obsX - 10, groundY + 16);
+
+  if (altAGL && dHoriz) {
+    const objX = obsX + dHoriz * scale * 0.6;
+    const objY = groundY - altAGL * scale;
+
+    // Elevation line
+    ctx.strokeStyle = 'rgba(232,160,32,0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([3, 4]);
+    ctx.beginPath();
+    ctx.moveTo(obsX, groundY); ctx.lineTo(Math.min(objX, W - margin), Math.max(objY, margin));
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Horizontal dashed
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 6]);
+    ctx.beginPath();
+    ctx.moveTo(obsX, groundY); ctx.lineTo(Math.min(objX, W - margin), groundY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Vertical dashed
+    ctx.beginPath();
+    ctx.moveTo(Math.min(objX, W-margin), groundY);
+    ctx.lineTo(Math.min(objX, W-margin), Math.max(objY, margin));
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Object
+    const ox = Math.min(objX, W - margin);
+    const oy = Math.max(objY, margin);
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(ox, oy, 5, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.fill();
+
+    // Angle arc
+    const arcR = 20;
+    ctx.strokeStyle = 'rgba(232,160,32,0.8)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(obsX, groundY, arcR, -Math.PI/2, -(elevAng * Math.PI / 180) - Math.PI/2, true);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(232,160,32,0.7)';
+    ctx.font = '9px Space Mono';
+    ctx.fillText(elevAng + '°', obsX + arcR + 4, groundY - 4);
+  }
+}
+
+// ── Report generation ─────────────────────────────────────────
+function generateReport() {
+  const T   = document.getElementById('temp').value;
+  const Td  = document.getElementById('dewpt').value;
+  const units = document.getElementById('units').value;
+  const elev  = document.getElementById('elev').value || '0';
+  const date  = document.getElementById('obs-date').value || '[DATE NOT RECORDED]';
+  const time  = document.getElementById('obs-time').value || '[TIME NOT RECORDED]';
+  const cover = document.getElementById('cloud-cover').options[document.getElementById('cloud-cover').selectedIndex].text;
+  const vis   = document.getElementById('visibility').value;
+  const notes = document.getElementById('obs-notes').value;
+  const obsID = document.getElementById('observer-id').value || '[ANONYMOUS]';
+  const loc   = document.getElementById('obs-location').value || '[LOCATION NOT RECORDED]';
+  const equip = document.getElementById('equipment').value || '[NOT RECORDED]';
+  const wxSrc = document.getElementById('wx-source').value || '[NOT RECORDED]';
+  const elevAng = document.getElementById('elev-angle').value;
+  const azimuth = document.getElementById('azimuth').value;
+  const angSize = document.getElementById('ang-size').value;
+  const duration = document.getElementById('duration').value;
+  const objDesc = document.getElementById('obj-description').value;
+  const cloudRel = document.getElementById('cloud-relation').options[document.getElementById('cloud-relation').selectedIndex].text;
+  const uF = units === 'F';
+
+  let cloudBaseAGL = '', cloudBaseMSL = '', spreadStr = '';
+  if (T && Td) {
+    const sp = parseFloat(T) - parseFloat(Td);
+    const h = uF ? (sp / 4.4) * 1000 : (sp / 2.5) * 1000;
+    cloudBaseAGL = Math.round(h).toLocaleString() + (uF ? ' ft' : ' m') + ' AGL';
+    cloudBaseMSL = Math.round(h + parseFloat(elev)).toLocaleString() + (uF ? ' ft' : ' m') + ' MSL';
+    spreadStr = sp.toFixed(1) + (uF ? '°F' : '°C');
+  }
+
+  let altEstimate = '';
+  if (elevAng && document.getElementById('horiz-dist').value) {
+    const h = parseFloat(document.getElementById('horiz-dist').value);
+    const toFt = { miles:5280, km:3280.84, ft:1, m:3.28084 };
+    const dft = h * toFt[document.getElementById('dist-units').value];
+    const d = uF ? dft : dft/3.28084;
+    const alt = d * Math.tan(parseFloat(elevAng) * Math.PI / 180);
+    altEstimate = Math.round(alt).toLocaleString() + (uF ? ' ft' : ' m') + ' AGL (trigonometric estimate, single observer)';
+  }
+
+  const now = new Date().toISOString();
+
+  const report = `══════════════════════════════════════════════════════════
+SKYANCHOR AERIAL OBSERVATION REPORT
+Generated: ${now}
+══════════════════════════════════════════════════════════
+
+SECTION A — OBSERVER & CONDITIONS
+──────────────────────────────────
+Observer ID   : ${obsID}
+Location      : ${loc}
+Date / Time   : ${date} ${time}
+Equipment     : ${equip}
+Weather Source: ${wxSrc}
+
+SECTION B — SURFACE THERMODYNAMICS
+────────────────────────────────────
+Air Temperature  : ${T || '[NOT RECORDED]'} ${uF?'°F':'°C'}
+Dew Point        : ${Td || '[NOT RECORDED]'} ${uF?'°F':'°C'}
+T–Td Spread      : ${spreadStr || '[INSUFFICIENT DATA]'}
+Observer Elevation: ${elev} ${uF?'feet':'meters'} MSL
+Cloud Type       : ${cloudType || '[NOT SELECTED]'}
+Cloud Cover      : ${cover}
+Visibility       : ${vis} miles
+
+SECTION C — COMPUTED CLOUD BASE
+─────────────────────────────────
+LCL Height AGL   : ${cloudBaseAGL || '[INSUFFICIENT DATA]'}
+LCL Height MSL   : ${cloudBaseMSL || '[INSUFFICIENT DATA]'}
+Method           : Standard LCL formula [(T-Td)/${uF?'4.4':'2.5'}]×1000
+Uncertainty      : ±5–10% under convective conditions
+Note             : Formula applies to cumulus-family clouds under standard 
+                   tropospheric lapse rate. Accuracy reduced near fronts,
+                   temperature inversions, or marine boundary layers.
+
+SECTION D — OBSERVED PHENOMENON
+──────────────────────────────────
+Elevation Angle  : ${elevAng || '[NOT RECORDED]'}°
+Azimuth          : ${azimuth || '[NOT RECORDED]'}° (true north reference)
+Angular Size     : ${angSize || '[NOT RECORDED]'}°
+Duration         : ${duration || '[NOT RECORDED]'}
+Cloud Relation   : ${cloudRel}
+${altEstimate ? 'Estimated Altitude: ' + altEstimate : ''}
+
+Object Description:
+${objDesc || '[NO DESCRIPTION PROVIDED]'}
+
+SECTION E — ALTITUDE CONSTRAINTS
+──────────────────────────────────
+${cloudBaseAGL ? `Computed cloud base: ${cloudBaseAGL}
+Object/cloud relation: ${cloudRel}
+` : '[INSUFFICIENT ATMOSPHERIC DATA FOR CONSTRAINT]'}
+Trigonometric altitude estimate: ${altEstimate || '[INSUFFICIENT ANGULAR/RANGE DATA]'}
+
+SECTION F — OBSERVER NOTES
+────────────────────────────
+${notes || '[NO ADDITIONAL NOTES]'}
+
+══════════════════════════════════════════════════════════
+METHODOLOGICAL NOTES
+──────────────────────────────────────────────────────────
+This report contains observational data and physical 
+estimates derived from standard meteorological formulas.
+It does not contain identification claims. 
+Altitude figures carry the uncertainties noted above.
+All angles are observer estimates unless instrumented.
+Range estimates carry ±50% uncertainty unless GPS-derived.
+
+For multi-observer geometric triangulation, coordinate 
+with a second observer at known GPS separation, record 
+both elevation angles, apply formula:
+H = B × tan(α) × tan(β) / (tan(α) + tan(β))
+
+SkyAnchor — Open methodology. Public domain.
+══════════════════════════════════════════════════════════`;
+
+  const out = document.getElementById('report-output');
+  out.textContent = report;
+  out.style.display = 'block';
+  document.getElementById('report-section');
+}
+
+function copyReport() {
+  const text = document.getElementById('report-output').textContent;
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target;
+    btn.textContent = '[ COPIED ]';
+    setTimeout(() => btn.textContent = '[ COPY TO CLIPBOARD ]', 2000);
+  });
+}
+
+function downloadReport() {
+  const text = document.getElementById('report-output').textContent;
+  if (!text) return;
+  const blob = new Blob([text], {type: 'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'skyanchor-report-' + new Date().toISOString().slice(0,10) + '.txt';
+  a.click();
+}
+
+// Auto-set today's date
+document.getElementById('obs-date').value = new Date().toISOString().slice(0,10);
+
+// ── GPS State ─────────────────────────────────────────────────
+let gpsData = null;
+
+function requestGPS() {
+  const status = document.getElementById('gps-status');
+  if (!navigator.geolocation) {
+    status.textContent = '✗ Geolocation not supported in this browser.';
+    status.style.color = 'var(--red)';
+    return;
+  }
+  status.textContent = '◌ Acquiring position — please allow location access...';
+  status.style.color = 'var(--amber-dim)';
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const { latitude, longitude, altitude, accuracy, altitudeAccuracy } = pos.coords;
+      const ts = new Date(pos.timestamp).toISOString();
+
+      gpsData = { latitude, longitude, altitude, accuracy, altitudeAccuracy, timestamp: ts };
+
+      document.getElementById('gps-lat').value      = latitude.toFixed(6) + '°';
+      document.getElementById('gps-lon').value      = longitude.toFixed(6) + '°';
+      document.getElementById('gps-alt-raw').value  = altitude ? altitude.toFixed(1) + ' m (±' + (altitudeAccuracy ? altitudeAccuracy.toFixed(0) : '?') + ' m)' : 'Not available (GPS altitude unreliable on many devices)';
+      document.getElementById('gps-accuracy').value = '±' + accuracy.toFixed(0) + ' m horizontal';
+      document.getElementById('gps-timestamp').value = ts.replace('T',' ').slice(0,19) + ' UTC';
+
+      status.textContent = '✓ Position acquired — ' + accuracy.toFixed(0) + ' m accuracy';
+      status.style.color = 'var(--green)';
+
+      // Reverse geocode via OSM Nominatim (no API key needed, public service)
+      document.getElementById('gps-place').value = 'Looking up...';
+      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&zoom=10`, {
+        headers: { 'Accept-Language': 'en' }
+      })
+      .then(r => r.json())
+      .then(d => {
+        const addr = d.address || {};
+        const city    = addr.city || addr.town || addr.village || addr.hamlet || '';
+        const county  = addr.county || '';
+        const state   = addr.state || '';
+        const country = addr.country_code ? addr.country_code.toUpperCase() : '';
+        const place   = [city, county, state, country].filter(Boolean).join(', ');
+        document.getElementById('gps-place').value = place || d.display_name?.split(',').slice(0,3).join(',') || 'Unknown';
+        gpsData.place = place;
+      })
+      .catch(() => {
+        document.getElementById('gps-place').value = 'Reverse geocode unavailable';
+      });
+
+      document.getElementById('gps-apply-btn').style.display = 'inline-block';
+      document.getElementById('gps-clear-btn').style.display = 'inline-block';
+    },
+    (err) => {
+      const msgs = {
+        1: 'Permission denied — location access blocked by browser settings.',
+        2: 'Position unavailable — could not determine location.',
+        3: 'Timeout — took too long to acquire GPS fix.'
+      };
+      status.textContent = '✗ ' + (msgs[err.code] || err.message);
+      status.style.color = 'var(--red)';
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+  );
+}
+
+function applyGPSToForm() {
+  if (!gpsData) return;
+
+  // Fill observation time with current local time
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  const timeStr = hh + ':' + mm;
+  const dateStr = now.toISOString().slice(0,10);
+
+  if (!document.getElementById('obs-time').value)
+    document.getElementById('obs-time').value = timeStr;
+  if (!document.getElementById('obs-date').value || document.getElementById('obs-date').value === new Date().toISOString().slice(0,10))
+    document.getElementById('obs-date').value = dateStr;
+
+  // Fill elevation from GPS altitude (convert m to ft if in F mode)
+  if (gpsData.altitude) {
+    const uF = document.getElementById('units').value === 'F';
+    const elevVal = uF ? Math.round(gpsData.altitude * 3.28084) : Math.round(gpsData.altitude);
+    document.getElementById('elev').value = elevVal;
+    computeLive();
+  }
+
+  // Fill report tab location
+  const latDeg = gpsData.latitude.toFixed(5);
+  const lonDeg = gpsData.longitude.toFixed(5);
+  const locStr = (gpsData.place ? gpsData.place + ' · ' : '') + latDeg + '°, ' + lonDeg + '°';
+  document.getElementById('obs-location').value = locStr;
+
+  const status = document.getElementById('gps-status');
+  status.textContent = '✓ Applied to form — elevation, time, date, and location fields updated.';
+  status.style.color = 'var(--green)';
+}
+
+function clearGPS() {
+  gpsData = null;
+  ['gps-lat','gps-lon','gps-alt-raw','gps-accuracy','gps-timestamp','gps-place'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('gps-status').textContent = 'Location data cleared.';
+  document.getElementById('gps-status').style.color = 'var(--text-dim)';
+  document.getElementById('gps-apply-btn').style.display = 'none';
+  document.getElementById('gps-clear-btn').style.display = 'none';
+}
+
+// ── Patch report generation to include GPS data ───────────────
+const _origGenerateReport = generateReport;
+generateReport = function() {
+  _origGenerateReport();
+  if (!gpsData) return;
+
+  const out = document.getElementById('report-output');
+  if (!out || !out.textContent) return;
+
+  const gpsSec =
+`\nSECTION G — GPS ANCHOR DATA
+────────────────────────────
+Latitude         : ${gpsData.latitude.toFixed(6)}°
+Longitude        : ${gpsData.longitude.toFixed(6)}°
+GPS Altitude     : ${gpsData.altitude ? gpsData.altitude.toFixed(1) + ' m (±' + (gpsData.altitudeAccuracy ? gpsData.altitudeAccuracy.toFixed(0) : '?') + ' m)' : 'Not available'}
+Horizontal Acc.  : ±${gpsData.accuracy.toFixed(0)} m
+Fix Timestamp    : ${gpsData.timestamp}
+Approx. Location : ${gpsData.place || 'Not resolved'}
+Coordinate Fmt   : WGS84 decimal degrees
+Note             : GPS altitude is device-reported and may differ from surveyed elevation
+                   by 10–30 m due to geoid undulation. Use as reference, not precision.
+`;
+
+  // Insert before final separator
+  out.textContent = out.textContent.replace(
+    'SkyAnchor — Open methodology. Public domain.',
+    gpsSec + '\nSkyAnchor — Open methodology. Public domain.'
+  );
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,2599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkyAnchor v2 — SovereignSkies Observer Network</title>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sky: #07090f;
+    --panel: #0d1117;
+    --panel2: #111820;
+    --border: #1e3040;
+    --amber: #e8a020;
+    --amber-dim: #7a5010;
+    --amber-glow: #ffbe4a;
+    --cyan: #28b4c8;
+    --cyan-dim: #0e4a54;
+    --green: #2ecc71;
+    --red: #e74c3c;
+    --purple: #9b59b6;
+    --text: #c8d8e0;
+    --text-dim: #4a6070;
+    --text-muted: #2a3a48;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--sky);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 50% 10%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 80%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 85% 35%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 15% 85%, rgba(255,255,255,0.2) 0%, transparent 100%),
+      radial-gradient(1px 1px at 60% 45%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 40% 90%, rgba(255,255,255,0.2) 0%, transparent 100%),
+      radial-gradient(1px 1px at 92% 60%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 5% 50%, rgba(255,255,255,0.2) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+    margin-bottom: 32px;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .logo-block h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    letter-spacing: 4px;
+    color: var(--amber);
+    text-shadow: 0 0 30px rgba(232,160,32,0.4);
+    line-height: 1;
+  }
+
+  .logo-block .tagline {
+    font-family: 'Courier Prime', monospace;
+    font-style: italic;
+    color: var(--text-dim);
+    font-size: 12px;
+    letter-spacing: 2px;
+    margin-top: 4px;
+  }
+
+  .version-badge {
+    background: var(--panel);
+    border: 1px solid var(--cyan-dim);
+    padding: 6px 12px;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--cyan);
+    text-transform: uppercase;
+  }
+
+  .mission-statement {
+    margin-top: 16px;
+    padding: 12px 16px;
+    border-left: 3px solid var(--amber-dim);
+    background: rgba(232,160,32,0.04);
+    font-family: 'Courier Prime', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.7;
+    max-width: 680px;
+  }
+
+  .section-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 3px;
+    color: var(--amber);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--amber-dim), transparent);
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .panel-title {
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--amber-dim);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .field-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+  }
+
+  .field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .field-group label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .field-group .hint {
+    font-size: 9px;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-top: -3px;
+  }
+
+  input[type="number"], input[type="text"], select, textarea {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--amber-glow);
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    padding: 8px 10px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--amber);
+    box-shadow: 0 0 0 1px rgba(232,160,32,0.2);
+  }
+
+  select option { background: var(--panel2); color: var(--text); }
+  textarea { resize: vertical; min-height: 80px; font-size: 12px; color: var(--text); }
+
+  .btn-compute {
+    background: transparent;
+    border: 1px solid var(--amber);
+    color: var(--amber);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 4px;
+    padding: 12px 32px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: block;
+    width: 100%;
+    margin-top: 20px;
+  }
+
+  .btn-compute:hover {
+    background: rgba(232,160,32,0.08);
+    box-shadow: 0 0 20px rgba(232,160,32,0.2);
+  }
+
+  .btn-compute:active { transform: scale(0.99); }
+
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 8px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-secondary:hover { border-color: var(--cyan); color: var(--cyan); }
+
+  .btn-cyan {
+    background: transparent;
+    border: 1px solid var(--cyan-dim);
+    color: var(--cyan);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 8px 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-cyan:hover { border-color: var(--cyan); box-shadow: 0 0 12px rgba(40,180,200,0.2); }
+
+  #results-panel {
+    display: none;
+    animation: fadeSlide 0.4s ease;
+  }
+
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .result-card {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    padding: 14px;
+  }
+
+  .result-card .rc-label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .result-card .rc-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--amber-glow);
+    line-height: 1;
+    text-shadow: 0 0 12px rgba(255,190,74,0.3);
+  }
+
+  .result-card .rc-unit {
+    font-size: 11px;
+    color: var(--amber-dim);
+    margin-top: 2px;
+  }
+
+  .result-card.highlight { border-color: var(--amber-dim); background: rgba(232,160,32,0.05); }
+  .result-card.cyan-card .rc-value { color: var(--cyan); text-shadow: 0 0 12px rgba(40,180,200,0.3); }
+  .result-card.cyan-card { border-color: var(--cyan-dim); }
+
+  .tri-viz {
+    position: relative;
+    height: 200px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    margin-bottom: 16px;
+    background: linear-gradient(to bottom, #080c14 0%, #0a1020 60%, #0d1525 100%);
+  }
+
+  .tri-viz canvas { width: 100%; height: 100%; display: block; }
+
+  .confidence-bar-wrap { margin: 12px 0; }
+
+  .conf-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+
+  .conf-bar {
+    height: 6px;
+    background: var(--text-muted);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .conf-fill {
+    height: 100%;
+    background: linear-gradient(to right, var(--amber-dim), var(--amber-glow));
+    transition: width 0.8s ease;
+    box-shadow: 0 0 8px rgba(232,160,32,0.4);
+  }
+
+  .method-note {
+    background: rgba(40,180,200,0.04);
+    border: 1px solid var(--cyan-dim);
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    font-family: 'Courier Prime', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    color: #8ab8c8;
+  }
+
+  .method-note strong {
+    color: var(--cyan);
+    letter-spacing: 1px;
+    font-size: 10px;
+    text-transform: uppercase;
+  }
+
+  #report-output {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    padding: 16px;
+    font-family: 'Courier Prime', monospace;
+    font-size: 11px;
+    line-height: 1.8;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+    display: none;
+    max-height: 360px;
+    overflow-y: auto;
+  }
+
+  .error-msg { color: var(--red); font-size: 11px; margin-top: 8px; display: none; }
+
+  .sky-type-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .sky-type-btn {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    line-height: 1.4;
+  }
+
+  .sky-type-btn:hover { border-color: var(--amber-dim); }
+  .sky-type-btn.active { border-color: var(--amber); color: var(--amber); background: rgba(232,160,32,0.07); }
+
+  .elev-visual { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+
+  .elev-arc {
+    width: 56px; height: 28px;
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 28px 28px 0 0;
+    position: relative;
+    overflow: visible;
+    flex-shrink: 0;
+  }
+
+  #elev-needle {
+    position: absolute;
+    bottom: 0; left: 50%;
+    width: 2px; height: 24px;
+    background: var(--amber);
+    transform-origin: bottom center;
+    transform: translateX(-50%) rotate(0deg);
+    transition: transform 0.3s ease;
+    box-shadow: 0 0 6px rgba(232,160,32,0.5);
+  }
+
+  .tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .tab-btn {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-dim);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: -1px;
+  }
+
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--amber); border-bottom-color: var(--amber); }
+  .tab-btn.cyan-tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  td, th { padding: 8px 10px; border: 1px solid var(--text-muted); text-align: left; }
+  th { background: var(--panel2); color: var(--amber-dim); font-size: 9px; letter-spacing: 2px; text-transform: uppercase; font-weight: normal; }
+  tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+  .alt-ladder { background: var(--panel); border: 1px solid var(--border); padding: 20px; margin-bottom: 20px; overflow-x: auto; }
+  .alt-ladder-inner { position: relative; min-width: 520px; }
+  .alt-scale { display: flex; flex-direction: column; gap: 0; }
+  .alt-band { display: grid; grid-template-columns: 90px 6px 1fr; align-items: center; gap: 0 10px; min-height: 36px; border-bottom: 1px solid var(--text-muted); padding: 4px 0; transition: background 0.15s; }
+  .alt-band:hover { background: rgba(232,160,32,0.04); }
+  .alt-band.band-human  { --band-color: #5a8a6a; }
+  .alt-band.band-infra  { --band-color: #4a90a4; }
+  .alt-band.band-tower  { --band-color: #e8a020; }
+  .alt-band.band-building { --band-color: #9a7040; }
+  .alt-band.band-sky    { --band-color: #5060c0; }
+  .alt-band.band-aviation { --band-color: #28b4c8; }
+  .alt-band.band-high   { --band-color: #c050a0; }
+  .alt-band.band-space  { --band-color: #e04040; }
+  .alt-height { font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: var(--band-color, var(--amber)); text-align: right; white-space: nowrap; line-height: 1.2; }
+  .alt-height small { display: block; font-family: 'Space Mono', monospace; font-size: 8px; color: var(--text-muted); letter-spacing: 1px; }
+  .alt-pip { width: 6px; align-self: stretch; background: var(--band-color, var(--amber)); opacity: 0.7; border-radius: 3px; min-height: 20px; }
+  .alt-desc { font-size: 11px; color: var(--text); line-height: 1.4; }
+  .alt-desc strong { font-size: 10px; color: var(--band-color, var(--amber)); letter-spacing: 1px; text-transform: uppercase; display: block; margin-bottom: 1px; }
+  .alt-desc .note { font-size: 9px; color: var(--text-dim); font-family: 'Courier Prime', monospace; font-style: italic; }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--panel); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--amber-dim); }
+
+  footer { border-top: 1px solid var(--border); padding-top: 20px; margin-top: 40px; font-size: 10px; color: var(--text-muted); line-height: 1.8; font-family: 'Courier Prime', monospace; }
+  footer a { color: var(--text-dim); }
+
+  /* ── Weather Autofill ─────────────────────────────── */
+  .wx-autofill-strip {
+    background: rgba(40,180,200,0.05);
+    border: 1px solid var(--cyan-dim);
+    padding: 12px 16px;
+    margin-top: 12px;
+    display: none;
+  }
+
+  .wx-autofill-strip .wx-strip-title {
+    font-size: 9px; letter-spacing: 2px; color: var(--cyan); text-transform: uppercase;
+    margin-bottom: 10px; font-family: 'Space Mono', monospace;
+  }
+
+  .wx-badge {
+    display: inline-block; font-size: 8px; letter-spacing: 1px;
+    padding: 1px 5px; text-transform: uppercase;
+    font-family: 'Space Mono', monospace; vertical-align: middle;
+  }
+
+  .wx-badge.live   { background: rgba(46,204,113,0.12); color: var(--green); border: 1px solid rgba(46,204,113,0.3); }
+  .wx-badge.gps    { background: rgba(40,180,200,0.1); color: var(--cyan); border: 1px solid var(--cyan-dim); }
+  .wx-badge.manual { background: rgba(232,160,32,0.08); color: var(--amber-dim); border: 1px solid var(--amber-dim); }
+  .wx-badge.empty  { background: rgba(255,255,255,0.03); color: var(--text-muted); border: 1px solid var(--text-muted); }
+
+  /* ── Data Quality Panel ──────────────────────────── */
+  .dq-panel {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+  }
+
+  .dq-title {
+    font-size: 9px; letter-spacing: 2px; color: var(--amber-dim);
+    text-transform: uppercase; margin-bottom: 10px; font-family: 'Space Mono', monospace;
+  }
+
+  .dq-row {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 5px 0; border-bottom: 1px solid rgba(42,58,72,0.5);
+    font-size: 10px; font-family: 'Courier Prime', monospace;
+  }
+
+  .dq-row:last-child { border-bottom: none; }
+
+  .dq-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+  .dq-dot.high   { background: var(--green); box-shadow: 0 0 5px rgba(46,204,113,0.6); }
+  .dq-dot.med    { background: var(--amber); box-shadow: 0 0 4px rgba(232,160,32,0.4); }
+  .dq-dot.low    { background: var(--amber-dim); }
+  .dq-dot.off    { background: var(--text-muted); }
+
+  .dq-metric { flex: 1; color: var(--text-dim); }
+  .dq-metric strong { color: var(--text); display: block; font-size: 10px; }
+  .dq-note { flex: 2; font-size: 10px; color: var(--text-dim); line-height: 1.4; }
+  .dq-impact { font-size: 8px; letter-spacing: 1px; min-width: 40px; text-align: right; padding-top: 2px; }
+
+  /* ── Observer Portrait Canvas ────────────────────── */
+  .portrait-wrap {
+    position: relative;
+    border: 1px solid var(--border);
+    background: #04060a;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  #portrait-canvas { display: block; width: 100%; }
+
+  .portrait-controls {
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+    padding: 10px 0;
+  }
+
+  .portrait-legend {
+    font-size: 9px; color: var(--text-muted); font-family: 'Courier Prime', monospace;
+    font-style: italic; margin-top: 6px; line-height: 1.6;
+  }
+
+  /* ── SovereignSkies ──────────────────────────────── */
+  .sovereign-hero {
+    background: rgba(40,180,200,0.04);
+    border-left: 3px solid var(--cyan-dim);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    font-family: 'Courier Prime', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.8;
+  }
+
+  .sovereign-hero .sh-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 3px;
+    color: var(--cyan);
+    line-height: 1;
+    margin-bottom: 10px;
+  }
+
+  .sovereign-hero .sh-sub {
+    color: var(--amber-dim);
+    font-size: 11px;
+    letter-spacing: 1px;
+    margin-top: 12px;
+    font-style: italic;
+  }
+
+  .obs-counter {
+    display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;
+  }
+
+  .obs-count-card {
+    background: var(--panel2); border: 1px solid var(--border);
+    padding: 12px 16px; flex: 1; min-width: 120px;
+  }
+
+  .obs-count-card .occ-label { font-size: 9px; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+  .obs-count-card .occ-val   { font-family: 'Bebas Neue', sans-serif; font-size: 32px; color: var(--cyan); line-height: 1; }
+  .obs-count-card .occ-sub   { font-size: 9px; color: var(--text-muted); font-family: 'Courier Prime', monospace; margin-top: 2px; }
+
+  .cluster-canvas-wrap {
+    position: relative;
+    border: 1px solid var(--border);
+    background: #030507;
+    overflow: hidden;
+  }
+
+  #cluster-canvas { display: block; width: 100%; }
+
+  .gate-overlay {
+    position: absolute; inset: 0;
+    background: rgba(4,6,10,0.93);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 10; text-align: center; padding: 20px;
+  }
+
+  .gate-overlay p {
+    font-size: 12px; color: var(--text-dim); margin-bottom: 16px;
+    line-height: 1.8; font-family: 'Courier Prime', monospace;
+    max-width: 400px;
+  }
+
+  .cluster-legend {
+    display: none; margin-top: 10px; padding: 10px 14px;
+    background: var(--panel2); border: 1px solid var(--border);
+  }
+
+  .cluster-legend-inner {
+    display: flex; gap: 16px; flex-wrap: wrap;
+    font-size: 10px; color: var(--text-dim); font-family: 'Courier Prime', monospace;
+  }
+
+  .cl-dot {
+    display: inline-block; width: 9px; height: 9px;
+    border-radius: 50%; margin-right: 5px; vertical-align: middle;
+  }
+
+  .recent-obs-card {
+    background: var(--panel2); border: 1px solid var(--border);
+    padding: 12px 14px; margin-bottom: 8px;
+    font-family: 'Courier Prime', monospace; font-size: 11px;
+  }
+
+  .recent-obs-card .roc-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 8px; flex-wrap: wrap; margin-bottom: 6px;
+  }
+
+  .recent-obs-card .roc-id {
+    font-size: 9px; color: var(--text-muted); letter-spacing: 1px;
+  }
+
+  /* ── Share Card ──────────────────────────────────── */
+  #share-card-canvas { display: none; }
+
+  @media (max-width: 600px) {
+    .logo-block h1 { font-size: 36px; }
+    .field-grid { grid-template-columns: 1fr; }
+    .result-grid { grid-template-columns: 1fr 1fr; }
+    .tab-btn { font-size: 9px; padding: 8px 10px; letter-spacing: 1px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-top">
+      <div class="logo-block">
+        <h1>SkyAnchor</h1>
+        <div class="tagline">SOVEREIGN SKIES OBSERVER NETWORK · CLOUD TRIANGULATION · OPEN METHODOLOGY</div>
+      </div>
+      <div class="version-badge">v2.0 · SOVEREIGN SKIES EDITION</div>
+    </div>
+    <div class="mission-statement">
+      Free scientific methodology for sky observers. GPS-anchored. Weather-autofilled.
+      Your observation — anonymous or attributed — is scientifically valid the moment it is
+      anchored to physics. Enter what you have. The tool does the rest.
+      Submit to unlock the SovereignSkies cluster network.
+    </div>
+  </header>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('observe',this)">I. Observe</button>
+    <button class="tab-btn" onclick="switchTab('triangulate',this)">II. Triangulate</button>
+    <button class="tab-btn" onclick="switchTab('portrait',this)">III. Observer Portrait</button>
+    <button class="tab-btn" onclick="switchTab('report',this)">IV. Report</button>
+    <button class="tab-btn" onclick="switchTab('method',this)">V. Methodology</button>
+    <button class="tab-btn cyan-tab" onclick="switchTab('sovereign',this)">VI. SovereignSkies ◈</button>
+  </div>
+
+  <!-- ═══════════ TAB 1: OBSERVATION ═══════════ -->
+  <div class="tab-content active" id="tab-observe">
+
+    <div class="section-label">Observer Location Anchor</div>
+    <div class="panel" id="gps-panel">
+      <div class="panel-title">// GPS REFERENCE — AUTOFILLS LOCATION, ELEVATION, TIME, AND LOCAL WEATHER</div>
+      <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <div style="font-size:11px;color:var(--text-dim);line-height:1.7;margin-bottom:12px">
+            Your GPS coordinates anchor the report to a verifiable ground position and
+            enable automatic local weather data fetch. Temperature and dew point are
+            pulled from Open-Meteo (free, no account). Coordinates stored only in your browser.
+          </div>
+          <button class="btn-compute" style="margin-top:0;font-size:15px;padding:10px 20px" onclick="requestGPS()">
+            ⊕ GET MY LOCATION
+          </button>
+          <div id="gps-status" style="margin-top:10px;font-size:10px;color:var(--text-dim);letter-spacing:1px;font-family:'Courier Prime',monospace;font-style:italic">
+            Awaiting location request...
+          </div>
+        </div>
+        <div style="flex:2;min-width:260px">
+          <div class="field-grid" style="grid-template-columns:1fr 1fr">
+            <div class="field-group">
+              <label>Latitude</label>
+              <input type="text" id="gps-lat" placeholder="— not yet acquired" readonly style="color:var(--text-dim)">
+            </div>
+            <div class="field-group">
+              <label>Longitude</label>
+              <input type="text" id="gps-lon" placeholder="— not yet acquired" readonly style="color:var(--text-dim)">
+            </div>
+            <div class="field-group">
+              <label>GPS Elevation (m)</label>
+              <input type="text" id="gps-alt-raw" placeholder="—" readonly style="color:var(--text-dim)">
+            </div>
+            <div class="field-group">
+              <label>GPS Accuracy</label>
+              <input type="text" id="gps-accuracy" placeholder="—" readonly style="color:var(--text-dim)">
+            </div>
+            <div class="field-group">
+              <label>Fix Timestamp</label>
+              <input type="text" id="gps-timestamp" placeholder="—" readonly style="color:var(--text-dim)">
+            </div>
+            <div class="field-group">
+              <label>Approx. Location</label>
+              <input type="text" id="gps-place" placeholder="—" readonly style="color:var(--text-dim)">
+            </div>
+          </div>
+          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn-secondary" id="gps-apply-btn" onclick="applyGPSToForm()" style="display:none">[ APPLY TO FORM ]</button>
+            <button class="btn-cyan" id="wx-fetch-btn" onclick="fetchWeatherAutofill()" style="display:none">[ ◈ FETCH LOCAL WEATHER ]</button>
+            <button class="btn-secondary" id="gps-clear-btn" onclick="clearGPS()" style="display:none">[ CLEAR ]</button>
+          </div>
+          <!-- Weather autofill strip -->
+          <div class="wx-autofill-strip" id="wx-autofill-strip">
+            <div class="wx-strip-title">// OPEN-METEO · LOCAL WEATHER DATA</div>
+            <div id="wx-autofill-status" style="font-size:11px;font-family:'Courier Prime',monospace;color:var(--text-dim)">
+              Ready to fetch...
+            </div>
+            <div id="wx-autofill-data" style="margin-top:8px;font-size:10px;color:var(--text-dim);font-family:'Courier Prime',monospace;line-height:1.8;display:none"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">Atmospheric Conditions</div>
+    <div class="panel">
+      <div class="panel-title">// SURFACE THERMODYNAMICS — REQUIRED FOR CLOUD BASE ESTIMATE</div>
+      <div class="field-grid">
+        <div class="field-group">
+          <label>Air Temperature <span class="wx-badge empty" id="temp-badge">MANUAL</span></label>
+          <div class="hint">At ground / observer level</div>
+          <input type="number" id="temp" placeholder="e.g. 72" step="0.1" oninput="onFieldInput('temp'); computeLive()">
+        </div>
+        <div class="field-group">
+          <label>Dew Point <span class="wx-badge empty" id="dewpt-badge">MANUAL</span></label>
+          <div class="hint">From weather station or app</div>
+          <input type="number" id="dewpt" placeholder="e.g. 55" step="0.1" oninput="onFieldInput('dewpt'); computeLive()">
+        </div>
+        <div class="field-group">
+          <label>Units</label>
+          <select id="units" onchange="computeLive()">
+            <option value="F">°F / feet</option>
+            <option value="C">°C / meters</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>Station Elevation <span class="wx-badge empty" id="elev-badge">MANUAL</span></label>
+          <div class="hint">Your elevation above sea level</div>
+          <input type="number" id="elev" placeholder="0" step="1" value="0" oninput="onFieldInput('elev'); computeLive()">
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">Sky Observation</div>
+    <div class="panel">
+      <div class="panel-title">// CLOUD TYPE & COVER — AFFECTS CONFIDENCE WEIGHT</div>
+
+      <div class="field-group" style="margin-bottom:16px">
+        <label>Predominant Cloud Type</label>
+        <div class="sky-type-grid" id="cloud-type-grid">
+          <button class="sky-type-btn" onclick="selectCloudType(this,'Cumulus')">Cumulus<br><span style="font-size:9px;opacity:0.6">puffy / fair weather</span></button>
+          <button class="sky-type-btn" onclick="selectCloudType(this,'Cumulonimbus')">Cumulonimbus<br><span style="font-size:9px;opacity:0.6">towering / storm</span></button>
+          <button class="sky-type-btn" onclick="selectCloudType(this,'Stratus')">Stratus<br><span style="font-size:9px;opacity:0.6">flat / overcast</span></button>
+          <button class="sky-type-btn" onclick="selectCloudType(this,'Altocumulus')">Altocumulus<br><span style="font-size:9px;opacity:0.6">mid-level patches</span></button>
+          <button class="sky-type-btn" onclick="selectCloudType(this,'Cirrus')">Cirrus<br><span style="font-size:9px;opacity:0.6">high wispy ice</span></button>
+          <button class="sky-type-btn" onclick="selectCloudType(this,'None / Clear')">None / Clear<br><span style="font-size:9px;opacity:0.6">no cloud cover</span></button>
+          <button class="sky-type-btn" onclick="selectCloudType(this,'Unknown')">Unknown<br><span style="font-size:9px;opacity:0.6">uncertain</span></button>
+        </div>
+      </div>
+
+      <div class="field-grid">
+        <div class="field-group">
+          <label>Cloud Cover Estimate</label>
+          <select id="cloud-cover" onchange="computeLive()">
+            <option value="0">SKC — Clear (0/8)</option>
+            <option value="1">FEW (1–2/8)</option>
+            <option value="3">SCT — Scattered (3–4/8)</option>
+            <option value="5">BKN — Broken (5–7/8)</option>
+            <option value="8">OVC — Overcast (8/8)</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>Visibility Estimate</label>
+          <select id="visibility">
+            <option value="10+">10+ miles / exceptional</option>
+            <option value="6-10">6–10 miles / good</option>
+            <option value="3-6">3–6 miles / moderate</option>
+            <option value="1-3">1–3 miles / reduced</option>
+            <option value="<1">Under 1 mile / poor</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>Time (Local)</label>
+          <input type="text" id="obs-time" placeholder="14:32 or 2:32 PM">
+        </div>
+        <div class="field-group">
+          <label>Date</label>
+          <input type="text" id="obs-date" placeholder="2025-06-12">
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div id="results-panel">
+      <div class="section-label">Computed Cloud Base</div>
+      <div class="result-grid">
+        <div class="result-card highlight">
+          <div class="rc-label">Cloud Base AGL</div>
+          <div class="rc-value" id="r-agl">—</div>
+          <div class="rc-unit" id="r-agl-unit">feet above ground</div>
+        </div>
+        <div class="result-card">
+          <div class="rc-label">Cloud Base MSL</div>
+          <div class="rc-value" id="r-msl">—</div>
+          <div class="rc-unit" id="r-msl-unit">feet MSL</div>
+        </div>
+        <div class="result-card cyan-card">
+          <div class="rc-label">Temp-Dewpoint Spread</div>
+          <div class="rc-value" id="r-spread">—</div>
+          <div class="rc-unit" id="r-spread-unit">°F spread</div>
+        </div>
+        <div class="result-card">
+          <div class="rc-label">LCL Method (±5%)</div>
+          <div class="rc-value" id="r-lcl">—</div>
+          <div class="rc-unit" id="r-lcl-unit">feet AGL</div>
+        </div>
+      </div>
+
+      <!-- DATA QUALITY PANEL -->
+      <div class="dq-panel" id="dq-panel">
+        <div class="dq-title">// DATA QUALITY — LOADING...</div>
+      </div>
+
+      <div class="confidence-bar-wrap">
+        <div class="conf-label">
+          <span>Estimate Confidence</span>
+          <span id="conf-pct">—</span>
+        </div>
+        <div class="conf-bar"><div class="conf-fill" id="conf-fill" style="width:0%"></div></div>
+      </div>
+
+      <div class="method-note">
+        <strong>Formula Used:</strong> Standard LCL (Lifting Condensation Level)<br>
+        Fahrenheit: H_agl = [(T − T_d) ÷ 4.4] × 1,000 ft&nbsp;&nbsp;|&nbsp;&nbsp;
+        Celsius: H_agl = [(T − T_d) ÷ 2.5] × 1,000 ft<br>
+        Source rate: ~5.4°F/1,000ft dry adiabatic lapse + ~1.0°F/1,000ft dewpoint decrease → net 4.4°F/1,000ft spread closure.
+        Valid primarily for convective cumulus-family clouds under standard tropospheric conditions.
+        Accuracy degrades near fronts, inversions, or marine layers.
+      </div>
+      <div class="error-msg" id="error-msg"></div>
+    </div>
+
+    <div class="field-group" style="margin-top:20px">
+      <label>Observer Notes (weather, anomalies, context)</label>
+      <textarea id="obs-notes" placeholder="Describe atmospheric conditions, any unusual phenomena, reference landmarks, equipment used..."></textarea>
+    </div>
+
+  </div>
+
+  <!-- ═══════════ TAB 2: TRIANGULATION ═══════════ -->
+  <div class="tab-content" id="tab-triangulate">
+
+    <div class="method-note">
+      <strong>Principle:</strong> If you observe an object at a measurable elevation angle above the horizon,
+      and you know (or can estimate) the cloud base height, you can establish a lower/upper altitude bound
+      by comparing whether the object appears above or below the cloud deck. With elevation angle and
+      distance-to-reference, basic trigonometry yields estimated altitude. Two observers separated by
+      a known baseline enable true geometric triangulation.
+    </div>
+
+    <div class="section-label">Observed Object / Phenomenon</div>
+    <div class="panel">
+      <div class="panel-title">// ANGULAR OBSERVATION — SINGLE OBSERVER</div>
+      <div class="field-grid">
+        <div class="field-group">
+          <label>Elevation Angle</label>
+          <div class="hint">0° = horizon, 90° = zenith</div>
+          <input type="number" id="elev-angle" min="0" max="90" placeholder="e.g. 35" oninput="updateNeedle(); triCompute(); drawPortrait()">
+          <div class="elev-visual">
+            <div class="elev-arc"><div id="elev-needle"></div></div>
+            <span id="elev-label" style="font-size:10px;color:var(--text-dim)">— degrees</span>
+          </div>
+        </div>
+        <div class="field-group">
+          <label>Azimuth / Bearing</label>
+          <div class="hint">Degrees from true North (0–360)</div>
+          <input type="number" id="azimuth" min="0" max="360" placeholder="e.g. 225 = SW" oninput="drawPortrait()">
+        </div>
+        <div class="field-group">
+          <label>Angular Size</label>
+          <div class="hint">Compare to moon (0.5°), fist at arm (10°)</div>
+          <input type="number" id="ang-size" step="0.1" placeholder="e.g. 0.5" oninput="triCompute()">
+        </div>
+        <div class="field-group">
+          <label>Observation Duration</label>
+          <input type="text" id="duration" placeholder="e.g. 12 seconds">
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">// DISTANCE / REFERENCE GEOMETRY — FOR ALTITUDE ESTIMATE</div>
+      <div class="field-grid">
+        <div class="field-group">
+          <label>Horizontal Distance to Object</label>
+          <div class="hint">If known or estimated</div>
+          <input type="number" id="horiz-dist" placeholder="e.g. 5" oninput="triCompute(); drawPortrait()">
+        </div>
+        <div class="field-group">
+          <label>Distance Units</label>
+          <select id="dist-units" onchange="triCompute()">
+            <option value="miles">miles</option>
+            <option value="km">kilometers</option>
+            <option value="ft">feet</option>
+            <option value="m">meters</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>Known Cloud Base AGL</label>
+          <div class="hint">From Section I — auto-fills if computed</div>
+          <input type="number" id="tri-cloud-base" placeholder="auto" oninput="triCompute()">
+        </div>
+        <div class="field-group">
+          <label>Object Position vs Cloud Deck</label>
+          <select id="cloud-relation" onchange="triCompute(); drawPortrait()">
+            <option value="unknown">Unknown / No cloud deck</option>
+            <option value="below">Clearly below clouds</option>
+            <option value="at">Approximately at cloud level</option>
+            <option value="above">Clearly above clouds</option>
+            <option value="through">Appeared to pass through / enter cloud</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div id="tri-results" style="display:none">
+      <div class="section-label">Triangulation Output</div>
+      <div class="result-grid">
+        <div class="result-card highlight">
+          <div class="rc-label">Estimated Altitude AGL</div>
+          <div class="rc-value" id="t-alt">—</div>
+          <div class="rc-unit" id="t-alt-unit">feet</div>
+        </div>
+        <div class="result-card">
+          <div class="rc-label">Altitude MSL</div>
+          <div class="rc-value" id="t-msl">—</div>
+          <div class="rc-unit">feet MSL</div>
+        </div>
+        <div class="result-card cyan-card">
+          <div class="rc-label">Cloud Constraint</div>
+          <div class="rc-value" id="t-constraint" style="font-size:16px;margin-top:4px">—</div>
+          <div class="rc-unit" id="t-constraint-note" style="font-size:10px;color:var(--text-dim)"></div>
+        </div>
+        <div class="result-card">
+          <div class="rc-label">Est. Physical Size</div>
+          <div class="rc-value" id="t-size">—</div>
+          <div class="rc-unit" id="t-size-unit">feet across</div>
+        </div>
+      </div>
+
+      <div class="tri-viz">
+        <canvas id="tri-canvas"></canvas>
+      </div>
+
+      <div class="method-note">
+        <strong>Trig Used:</strong> H_agl = D_horiz × tan(θ_elevation) + H_observer<br>
+        Physical size = 2 × D_slant × tan(θ_angular / 2)&nbsp;&nbsp;where D_slant = D_horiz / cos(θ_elevation)<br>
+        <strong>Cloud constraint:</strong> If object is reported below confirmed cloud base, altitude is bounded above by the LCL height.
+        If above, altitude is bounded below by cloud base. "Entered cloud" sets a precise altitude bracket.
+      </div>
+
+      <div class="panel" style="margin-top:16px">
+        <div class="panel-title">// TWO-OBSERVER BASELINE TRIANGULATION</div>
+        <div class="method-note" style="margin-bottom:12px">
+          <strong>For highest accuracy:</strong> Two observers at a known separation (baseline) both measuring
+          elevation angle to the same object yield altitude via: H = B × tan(α) × tan(β) / (tan(α) + tan(β))
+          where B is baseline distance, α and β are elevation angles from each observer.
+        </div>
+        <div class="field-grid">
+          <div class="field-group">
+            <label>Observer 2 — Elevation Angle</label>
+            <input type="number" id="obs2-elev" placeholder="e.g. 28" min="0" max="90" oninput="baselineCompute()">
+          </div>
+          <div class="field-group">
+            <label>Baseline Distance Between Observers</label>
+            <input type="number" id="baseline" placeholder="e.g. 2.5 miles" oninput="baselineCompute()">
+          </div>
+          <div class="field-group">
+            <label>Baseline Units</label>
+            <select id="baseline-units" onchange="baselineCompute()">
+              <option value="miles">miles</option>
+              <option value="km">kilometers</option>
+            </select>
+          </div>
+        </div>
+        <div id="baseline-result" style="margin-top:12px;display:none">
+          <div class="result-card highlight" style="display:inline-block;min-width:220px">
+            <div class="rc-label">Two-Observer Altitude AGL</div>
+            <div class="rc-value" id="b-alt">—</div>
+            <div class="rc-unit" id="b-unit">feet</div>
+          </div>
+          <div style="margin-top:10px;font-size:11px;color:var(--text-dim)">
+            Geometric method — independent of distance estimate. More robust when observers are well-separated.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-group" style="margin-top:20px">
+      <label>Object Description</label>
+      <textarea id="obj-description" placeholder="Shape, color, luminosity, motion pattern, sound, any distinguishing characteristics. Describe only what was observed directly."></textarea>
+    </div>
+
+    <!-- ALTITUDE REFERENCE LADDER -->
+    <div class="section-label" style="margin-top:28px">Altitude Reference Ladder</div>
+    <div class="method-note" style="margin-bottom:14px">
+      <strong>How to use:</strong> Find the band that matches your estimated altitude. Known structures
+      provide hard anchors — if an object appeared at the same height as a nearby cell tower or
+      building you can identify, that collapses your altitude uncertainty dramatically.
+    </div>
+    <div class="alt-ladder">
+      <div class="alt-ladder-inner">
+        <div class="alt-scale">
+          <div class="alt-band band-human"><div class="alt-height">5–6 ft<small>1.5–1.8 m</small></div><div class="alt-pip"></div><div class="alt-desc"><strong>Human / Eye Level</strong>Standing adult. Your observation baseline.<span class="note">Reference zero for elevation angle measurements</span></div></div>
+          <div class="alt-band band-human"><div class="alt-height">10–20 ft<small>3–6 m</small></div><div class="alt-pip"></div><div class="alt-desc"><strong>Single Story / Utility Pole</strong>Standard residential roof, streetlight, 5G small cell node on pole<span class="note">5G small cells: ~20 ft on utility poles</span></div></div>
+          <div class="alt-band band-infra"><div class="alt-height">30–50 ft<small>9–15 m</small></div><div class="alt-pip"></div><div class="alt-desc"><strong>3–4 Story Building / Small Cell Max</strong>Typical small commercial building, FCC cap for small wireless facilities (~50 ft)</div></div>
+          <div class="alt-band band-infra"><div class="alt-height">50–100 ft<small>15–30 m</small></div><div class="alt-pip"></div><div class="alt-desc"><strong>5–8 Story Building / Macro Cell Low End</strong>Mid-rise residential, standard cell tower minimum, 5G macro tower range begins</div></div>
+          <div class="alt-band band-tower"><div class="alt-height">150–200 ft<small>46–61 m</small></div><div class="alt-pip"></div><div class="alt-desc"><strong>Typical 4G/5G Macro Tower — Core Range</strong>Most common macro tower height. FAA lighting threshold at 200 ft.<span class="note">Towers often stop at 199 ft to avoid mandatory FAA beacon lighting</span></div></div>
+          <div class="alt-band band-tower"><div class="alt-height">300–400 ft<small>91–122 m</small></div><div class="alt-pip"></div><div class="alt-desc"><strong>Tall Macro Cell Tower / Rural High Reach</strong>Maximum traditional cell tower height. Reach: up to 25–40 miles rural.</div></div>
+          <div class="alt-band band-building"><div class="alt-height">555 ft<small>169 m</small></div><div class="alt-pip"></div><div class="alt-desc"><strong>Washington Monument</strong>Tallest masonry structure in the world. Hard landmark anchor.<span class="note">Visible from ~10 miles on clear day</span></div></div>
+          <div class="alt-band band-sky"><div class="alt-height">1,000–1,500 ft<small>305–457 m</small></div><div class="alt-pip"></div><div class="alt-desc"><strong>Major Skyscraper Range</strong>Empire State (1,454 ft), Chrysler (1,046 ft)</div></div>
+          <div class="alt-band band-sky"><div class="alt-height">1,776 ft<small>541 m</small></div><div class="alt-pip"></div><div class="alt-desc"><strong>One World Trade Center</strong>Tallest building in Western Hemisphere.</div></div>
+          <div class="alt-band band-aviation"><div class="alt-height">~1,000 ft AGL<small>~305 m</small></div><div class="alt-pip"></div><div class="alt-desc"><strong>FAA VFR Traffic Pattern Altitude</strong>Small aircraft fly traffic patterns at ~1,000 ft AGL.<span class="note">Anything at or above this altitude has high probability of being aircraft</span></div></div>
+          <div class="alt-band band-aviation"><div class="alt-height">400 ft<small>122 m</small></div><div class="alt-pip"></div><div class="alt-desc"><strong>FAA Part 107 Drone Ceiling</strong>Legal hobbyist drone max without waiver</div></div>
+          <div class="alt-band band-aviation"><div class="alt-height">10,000–35,000 ft<small>3–10.7 km</small></div><div class="alt-pip"></div><div class="alt-desc"><strong>Commercial Aviation Cruise / Cloud Ceiling</strong>Typical commercial cruise: FL310–FL410. Cumulus tops to ~35,000 ft</div></div>
+          <div class="alt-band band-high"><div class="alt-height">60,000–80,000 ft<small>18–24 km</small></div><div class="alt-pip"></div><div class="alt-desc"><strong>High Altitude / Stratosphere / Weather Balloon</strong>Stratospheric aircraft, high-altitude balloons, upper atmospheric phenomena</div></div>
+          <div class="alt-band band-high"><div class="alt-height">~328,000 ft<small>~100 km</small></div><div class="alt-pip"></div><div class="alt-desc"><strong>Kármán Line — Edge of Space</strong>Internationally recognized atmosphere/space boundary</div></div>
+          <div class="alt-band band-space"><div class="alt-height">250–400 mi<small>400–640 km</small></div><div class="alt-pip"></div><div class="alt-desc"><strong>Low Earth Orbit — ISS / Starlink</strong>ISS orbits ~250 miles. Visible to naked eye at dusk/dawn</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════ TAB 3: OBSERVER PORTRAIT ═══════════ -->
+  <div class="tab-content" id="tab-portrait">
+
+    <div class="method-note" style="margin-bottom:20px">
+      <strong>Observer Portrait</strong> — A living scientific illustration of your observation that builds as you enter data.
+      Each data point you contribute — GPS position, weather conditions, elevation angle, cloud constraint —
+      adds a layer of physical meaning. One careful observer with good data can constrain an altitude
+      to within a few hundred feet. That is a contribution to science. This card shows you why — and lets you share it.
+    </div>
+
+    <div class="section-label">Your Observation Portrait</div>
+
+    <div class="portrait-wrap" id="portrait-wrap">
+      <canvas id="portrait-canvas" height="420"></canvas>
+    </div>
+
+    <div class="portrait-controls">
+      <button class="btn-secondary" onclick="drawPortrait()">[ ↺ REFRESH ]</button>
+      <button class="btn-cyan" onclick="downloadPortrait()">[ ↓ SAVE AS IMAGE ]</button>
+      <button class="btn-secondary" onclick="copyPortraitLink()">[ ◈ COPY SHARE TEXT ]</button>
+    </div>
+    <div class="portrait-legend">
+      The portrait updates automatically as you fill in data on the Observe and Triangulate tabs.
+      Amber lines = your measurement vectors · Cyan = cloud base ceiling · Green dot = GPS anchor ·
+      White circle = estimated object position · Uncertainty bands shown to scale.
+    </div>
+
+    <div class="method-note" style="margin-top:20px">
+      <strong>Why a single observer matters:</strong><br>
+      A single ground observer with a GPS position, a calibrated temperature/dew point reading,
+      and a measured elevation angle can constrain an aerial object's altitude to within a physical bracket.
+      That constraint — above or below the cloud base — is binary and mathematically airtight if the LCL is well-computed.
+      It eliminates hypotheses, not just narrows them. With two coordinated observers, uncertainty collapses further.
+      The SovereignSkies network exists to aggregate these single-observer constraints into statistically meaningful clusters.
+      <br><br>
+      <strong style="color:var(--amber)">Your observation is not anecdote. It is a bounded physical measurement.</strong>
+    </div>
+
+  </div>
+
+  <!-- ═══════════ TAB 4: REPORT ═══════════ -->
+  <div class="tab-content" id="tab-report">
+
+    <div class="method-note" style="margin-bottom:20px">
+      <strong>Report Philosophy:</strong> A scientific field report records what was observed and measured —
+      not what it was. Altitude constraints, angular data, and atmospheric conditions let future analysis
+      discriminate between hypotheses. Speculation is labeled as such. Reproducibility and precision over narrative.
+    </div>
+
+    <div class="section-label">Observer Information</div>
+    <div class="panel">
+      <div class="field-grid">
+        <div class="field-group">
+          <label>Observer ID / Callsign</label>
+          <div class="hint">Can be anonymous</div>
+          <input type="text" id="observer-id" placeholder="OBS-7734 or leave blank">
+        </div>
+        <div class="field-group">
+          <label>Location (General)</label>
+          <div class="hint">City/region or lat-lon</div>
+          <input type="text" id="obs-location" placeholder="e.g. NE Oklahoma / 36.1°N 95.8°W">
+        </div>
+        <div class="field-group">
+          <label>Equipment Used</label>
+          <input type="text" id="equipment" placeholder="naked eye, binoculars 10x50, phone camera...">
+        </div>
+        <div class="field-group">
+          <label>Weather Source</label>
+          <div class="hint">Where you got temp/dew point</div>
+          <input type="text" id="wx-source" placeholder="e.g. Open-Meteo / GPS, Weather.gov METAR">
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-compute" onclick="generateReport()">⟶ GENERATE SCIENTIFIC REPORT</button>
+
+    <div style="margin-top:20px" id="report-section">
+      <div class="section-label">Generated Report</div>
+      <pre id="report-output"></pre>
+      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn-secondary" onclick="copyReport()">[ COPY TO CLIPBOARD ]</button>
+        <button class="btn-secondary" onclick="downloadReport()">[ DOWNLOAD .TXT ]</button>
+        <button class="btn-cyan" onclick="submitFromReport()">[ ◈ SUBMIT TO SOVEREIGNSKIES ]</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════ TAB 5: METHODOLOGY ═══════════ -->
+  <div class="tab-content" id="tab-method">
+
+    <div class="section-label">Scientific Basis</div>
+
+    <div class="method-note">
+      <strong>Cloud Base Altitude — The Physics</strong><br><br>
+      Unsaturated air rising through the atmosphere cools at the dry adiabatic lapse rate (DALR) of
+      approximately 5.4°F per 1,000 feet (9.8°C/km). The dew point decreases more slowly — roughly
+      1.0°F per 1,000 feet (1.8°C/km). The spread between ambient temperature and dew point therefore
+      closes at approximately 4.4°F per 1,000 feet. The altitude at which spread → 0 is the
+      Lifting Condensation Level (LCL) — the theoretical cloud base.
+    </div>
+
+    <div class="method-note">
+      <strong>LCL Formula (Standard / Aviation Rule of Thumb):</strong><br>
+      H_agl(ft) = [(T_F − T_d_F) / 4.4] × 1,000<br>
+      H_agl(m) = [(T_C − T_d_C) / 2.5] × 1,247<br><br>
+      For citizen science purposes, the standard formula is sufficient at ±200–500 feet
+      under convective conditions.
+    </div>
+
+    <div class="method-note">
+      <strong>Triangulation Geometry</strong><br><br>
+      Single-observer (range + angle): H_agl = D_horizontal × tan(θ_elevation)<br>
+      Physical size: Size = 2 × D_slant × tan(θ_angular / 2) where D_slant = D_horizontal / cos(θ_elevation)<br>
+      Two-observer baseline: H = B × [tan(α) × tan(β)] / [tan(α) + tan(β)]
+    </div>
+
+    <div class="section-label" style="margin-top:24px">Uncertainty Table</div>
+    <table>
+      <tr><th>Source</th><th>Typical Error</th><th>Notes</th></tr>
+      <tr><td>Temperature/Dew Point (weather station)</td><td>±1–2°F</td><td>Propagates to ±200–500 ft cloud base error</td></tr>
+      <tr><td>LCL formula (standard)</td><td>±5–10%</td><td>Worse near fronts, inversions, marine layers</td></tr>
+      <tr><td>Elevation angle (naked eye)</td><td>±5–10°</td><td>Use fist (10°), thumb (2°) as references</td></tr>
+      <tr><td>Elevation angle (phone inclinometer)</td><td>±1–3°</td><td>Most accessible tool for observers</td></tr>
+      <tr><td>Range estimate (visual)</td><td>±50%</td><td>Largest uncertainty — baseline method avoids it</td></tr>
+      <tr><td>Angular size (naked eye)</td><td>±30%</td><td>Use moon comparison (0.5°), finger widths</td></tr>
+      <tr><td>Two-observer baseline</td><td>±5–15%</td><td>Dominated by angle measurement precision</td></tr>
+      <tr><td>Open-Meteo API temp/dewpt</td><td>±1–3°F</td><td>Model-interpolated from nearby stations; good for citizen science</td></tr>
+    </table>
+
+    <div class="method-note" style="margin-top:20px">
+      <strong>Reference Angular Sizes (Memorize for Field Use)</strong><br><br>
+      Moon / Sun diameter: ~0.5°<br>
+      Thumbnail at arm's length: ~1°<br>
+      Index finger width at arm's length: ~2°<br>
+      Three fingers at arm's length: ~5°<br>
+      Closed fist at arm's length: ~10°<br>
+      Open hand (pinky to thumb) at arm's length: ~20°
+    </div>
+
+  </div>
+
+  <!-- ═══════════ TAB 6: SOVEREIGNSKIES ═══════════ -->
+  <div class="tab-content" id="tab-sovereign">
+
+    <div class="sovereign-hero">
+      <div class="sh-title">SovereignSkies Observer Network</div>
+      Your observation doesn't require your name. An anonymous report anchored to GPS coordinates,
+      a timestamp, and atmospheric data is <em>scientifically valid</em>. The act of recording
+      a bounded physical measurement — not a claim, a measurement — is a contribution to a distributed
+      sensor network that no institution controls.
+      <br><br>
+      Submit what you saw. In return, you gain access to the cluster map: an aggregated view of
+      observations near you, plotted by altitude band and confidence level.
+      The map is the value. The data is yours.
+      <div class="sh-sub">The contribution IS the credential. Submit once to unlock the network view.</div>
+    </div>
+
+    <!-- COUNTERS -->
+    <div class="section-label">Network Status</div>
+    <div class="obs-counter">
+      <div class="obs-count-card">
+        <div class="occ-label">Your Submissions</div>
+        <div class="occ-val" id="my-obs-count">0</div>
+        <div class="occ-sub">this device</div>
+      </div>
+      <div class="obs-count-card">
+        <div class="occ-label">With GPS Anchor</div>
+        <div class="occ-val" id="gps-obs-count">0</div>
+        <div class="occ-sub">position-verified</div>
+      </div>
+      <div class="obs-count-card">
+        <div class="occ-label">Avg Confidence</div>
+        <div class="occ-val" id="avg-conf-count">—</div>
+        <div class="occ-sub">your submissions</div>
+      </div>
+      <div class="obs-count-card">
+        <div class="occ-label">Network Nodes</div>
+        <div class="occ-val" style="color:var(--text-muted)">LOCAL</div>
+        <div class="occ-sub">backend coming soon</div>
+      </div>
+    </div>
+
+    <!-- SUBMIT FORM -->
+    <div class="section-label">Submit Observation</div>
+    <div class="panel">
+      <div class="panel-title">// ANONYMOUS SUBMISSION — ONLY MEASUREMENTS AND METADATA ARE STORED · NO ACCOUNT REQUIRED</div>
+      <div style="font-size:11px;color:var(--text-dim);margin-bottom:14px;line-height:1.7;font-family:'Courier Prime',monospace">
+        Submitting uses data already entered in Tabs I–II. You can submit with partial data —
+        even a cloud type + GPS anchor + timestamp is a valid constrained observation.
+        No email. No tracking. Nothing identifies you unless you add your Observer ID.
+      </div>
+      <div class="field-grid">
+        <div class="field-group">
+          <label>Observation Category</label>
+          <select id="sov-obs-type">
+            <option value="cloud">Cloud / Atmospheric</option>
+            <option value="aerial">Aerial Phenomenon</option>
+            <option value="light">Light / Luminous</option>
+            <option value="sound">Sound / Acoustic</option>
+            <option value="other">Other Sky Event</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>Self-Assessed Data Quality</label>
+          <select id="sov-confidence">
+            <option value="high">High — GPS + weather station autofill</option>
+            <option value="medium">Medium — some measured, some estimated</option>
+            <option value="low">Low — mostly visual estimates</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-group" style="margin-top:12px">
+        <label>Short Description (appears in cluster tooltip — keep factual)</label>
+        <input type="text" id="sov-desc" placeholder="e.g. 'bright white sphere, ~15s, moving NE, below cloud deck'">
+      </div>
+      <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+        <button class="btn-compute" style="flex:2" onclick="submitSovereignObs()">⊕ SUBMIT ANONYMOUS OBSERVATION</button>
+        <button class="btn-secondary" style="flex:1;margin-top:20px" onclick="clearAllSovObs()" title="Clear all local submissions">[ CLEAR LOCAL DATA ]</button>
+      </div>
+      <div id="sov-submit-status" style="margin-top:8px;font-size:11px;color:var(--text-dim);font-family:'Courier Prime',monospace;font-style:italic"></div>
+    </div>
+
+    <!-- CLUSTER MAP -->
+    <div class="section-label">Area Cluster Map</div>
+    <div style="font-size:11px;color:var(--text-dim);margin-bottom:12px;line-height:1.7;font-family:'Courier Prime',monospace">
+      Your submissions plotted on a local radar-style map. Color = altitude band.
+      Intensity = confidence level. Position = GPS-relative when available.
+      Submit one observation to unlock.
+    </div>
+
+    <div class="cluster-canvas-wrap" style="height:380px">
+      <canvas id="cluster-canvas" height="380"></canvas>
+      <div class="gate-overlay" id="cluster-gate">
+        <p>
+          <span style="font-size:36px;display:block;margin-bottom:16px;color:var(--amber-dim)">◉</span>
+          <strong style="color:var(--amber);font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;display:block;margin-bottom:8px">CLUSTER MAP LOCKED</strong>
+          Submit one observation to unlock the area cluster map.<br>
+          Anonymous data is fully accepted. No account required.<br>
+          <span style="font-size:10px;color:var(--text-muted)">Data stored locally in your browser only.</span>
+        </p>
+        <button class="btn-secondary" onclick="document.getElementById('sov-obs-type').focus()">
+          [ SCROLL TO SUBMISSION FORM ]
+        </button>
+      </div>
+    </div>
+
+    <div class="cluster-legend" id="cluster-legend">
+      <div class="cluster-legend-inner">
+        <span><span class="cl-dot" style="background:#5060c0"></span>0–5,000 ft low airspace</span>
+        <span><span class="cl-dot" style="background:#28b4c8"></span>5,000–20,000 ft mid</span>
+        <span><span class="cl-dot" style="background:#c050a0"></span>20,000–60,000 ft high</span>
+        <span><span class="cl-dot" style="background:#e04040"></span>60,000+ ft / space</span>
+        <span><span class="cl-dot" style="background:#4a6070"></span>altitude unknown</span>
+        <span style="margin-left:auto;color:var(--text-muted)">Size = confidence · Glow = GPS-anchored</span>
+      </div>
+    </div>
+
+    <!-- RECENT OBSERVATIONS -->
+    <div id="recent-obs-section" style="display:none;margin-top:24px">
+      <div class="section-label">Your Observation Log</div>
+      <div id="recent-obs-list"></div>
+    </div>
+
+  </div>
+
+  <footer>
+    SkyAnchor v2 — SovereignSkies Edition · Open methodology, public domain formulas, no proprietary claims.
+    Weather data: <a href="https://open-meteo.com" target="_blank">Open-Meteo</a> (free, no key required).
+    Reverse geocoding: OpenStreetMap Nominatim.
+    Cluster data stored locally in your browser only — never transmitted without your action.
+    <br>
+    Formulas: LCL standard (aviation), basic trigonometry. Not a substitute for calibrated meteorological instruments.
+  </footer>
+
+</div>
+
+<!-- Hidden share card canvas -->
+<canvas id="share-card-canvas" style="display:none"></canvas>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════
+let cloudType = '';
+let gpsData = null;
+const fieldSources = {}; // 'temp', 'dewpt', 'elev' → 'station'|'gps'|'manual'
+
+// ══════════════════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════════════════
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (id === 'portrait') setTimeout(drawPortrait, 50);
+  if (id === 'sovereign') { refreshSovereignUI(); }
+}
+
+// ══════════════════════════════════════════════════════════
+// CLOUD TYPE
+// ══════════════════════════════════════════════════════════
+function selectCloudType(el, type) {
+  document.querySelectorAll('.sky-type-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  cloudType = type;
+  computeLive();
+  drawPortrait();
+}
+
+// ══════════════════════════════════════════════════════════
+// FIELD SOURCE TRACKING
+// ══════════════════════════════════════════════════════════
+function onFieldInput(fieldId) {
+  if (!fieldSources[fieldId] || fieldSources[fieldId] === 'station' || fieldSources[fieldId] === 'gps') {
+    // User overriding autofill — mark as manual
+    setFieldBadge(fieldId, 'manual');
+  }
+}
+
+function setFieldBadge(fieldId, source) {
+  fieldSources[fieldId] = source;
+  const badge = document.getElementById(fieldId + '-badge');
+  if (!badge) return;
+  const labels = { station: 'STATION', gps: 'GPS', manual: 'MANUAL', empty: '—' };
+  const classes = { station: 'live', gps: 'gps', manual: 'manual', empty: 'empty' };
+  badge.textContent = labels[source] || source.toUpperCase();
+  badge.className = 'wx-badge ' + (classes[source] || 'empty');
+}
+
+// ══════════════════════════════════════════════════════════
+// CLOUD BASE COMPUTE
+// ══════════════════════════════════════════════════════════
+function computeLive() {
+  const T   = parseFloat(document.getElementById('temp').value);
+  const Td  = parseFloat(document.getElementById('dewpt').value);
+  const units = document.getElementById('units').value;
+  const elev  = parseFloat(document.getElementById('elev').value) || 0;
+
+  if (isNaN(T) || isNaN(Td)) {
+    document.getElementById('results-panel').style.display = 'none';
+    updateDataQuality(null, null);
+    return;
+  }
+
+  if (Td > T) {
+    showError('Dew point cannot exceed air temperature.');
+    return;
+  }
+  hideError();
+
+  const spread = T - Td;
+  let h_agl, h_lcl_alt, unit_str, spread_unit;
+
+  if (units === 'F') {
+    h_agl = (spread / 4.4) * 1000;
+    h_lcl_alt = Math.round(h_agl * 0.95);
+    unit_str = 'feet'; spread_unit = '°F';
+  } else {
+    h_agl = (spread / 2.5) * 1000;
+    h_lcl_alt = Math.round(h_agl * 0.95);
+    unit_str = 'meters'; spread_unit = '°C';
+  }
+
+  const h_msl = h_agl + elev;
+
+  document.getElementById('r-agl').textContent     = Math.round(h_agl).toLocaleString();
+  document.getElementById('r-msl').textContent     = Math.round(h_msl).toLocaleString();
+  document.getElementById('r-spread').textContent  = spread.toFixed(1);
+  document.getElementById('r-lcl').textContent     = h_lcl_alt.toLocaleString();
+  document.getElementById('r-agl-unit').textContent  = unit_str + ' above ground';
+  document.getElementById('r-msl-unit').textContent  = unit_str + ' MSL';
+  document.getElementById('r-spread-unit').textContent = spread_unit + ' spread';
+  document.getElementById('r-lcl-unit').textContent   = unit_str + ' AGL';
+
+  // Confidence
+  let conf = 72;
+  if (spread < 2) conf -= 20;
+  if (spread > 15) conf -= 10;
+  if (cloudType === 'Cumulus' || cloudType === 'Cumulonimbus') conf += 15;
+  if (cloudType === 'Stratus' || cloudType === 'Cirrus') conf -= 15;
+  if (cloudType === 'None / Clear') conf = 40;
+  if (fieldSources['temp'] === 'station') conf += 8;
+  if (fieldSources['dewpt'] === 'station') conf += 8;
+  if (gpsData) conf += 5;
+  conf = Math.min(94, Math.max(15, conf));
+
+  document.getElementById('conf-fill').style.width = conf + '%';
+  document.getElementById('conf-pct').textContent = conf + '%';
+  document.getElementById('results-panel').style.display = 'block';
+
+  // Auto-fill triangulation cloud base placeholder
+  document.getElementById('tri-cloud-base').placeholder = Math.round(h_agl).toLocaleString() + ' ' + unit_str;
+
+  updateDataQuality(T, Td);
+  drawPortrait();
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent = msg; el.style.display = 'block';
+  document.getElementById('results-panel').style.display = 'none';
+}
+
+function hideError() {
+  document.getElementById('error-msg').style.display = 'none';
+}
+
+// ══════════════════════════════════════════════════════════
+// DATA QUALITY PANEL
+// ══════════════════════════════════════════════════════════
+function updateDataQuality(T, Td) {
+  const dqEl = document.getElementById('dq-panel');
+  if (!dqEl) return;
+
+  const elevAng   = document.getElementById('elev-angle').value;
+  const horizDist = document.getElementById('horiz-dist').value;
+  const elevVal   = document.getElementById('elev').value;
+
+  const rows = [
+    {
+      label: 'Temperature',
+      val: T != null ? T + (document.getElementById('units').value === 'F' ? '°F' : '°C') : null,
+      src: fieldSources['temp'],
+      impact: 'HIGH',
+      note: T != null
+        ? (fieldSources['temp'] === 'station'
+            ? 'Open-Meteo station data — highest confidence, ±1–3° typical'
+            : 'User-entered — accuracy depends on your source')
+        : 'Missing — cloud base cannot be calculated'
+    },
+    {
+      label: 'Dew Point',
+      val: Td != null ? Td + (document.getElementById('units').value === 'F' ? '°F' : '°C') : null,
+      src: fieldSources['dewpt'],
+      impact: 'HIGH',
+      note: Td != null
+        ? (fieldSources['dewpt'] === 'station'
+            ? 'Open-Meteo station data — highest confidence'
+            : 'User-entered — dew point varies more than temp; use calibrated source')
+        : 'Missing — cloud base cannot be calculated'
+    },
+    {
+      label: 'GPS Position',
+      val: gpsData ? '±' + Math.round(gpsData.accuracy) + 'm horizontal' : null,
+      src: gpsData ? 'gps' : null,
+      impact: 'MED',
+      note: gpsData
+        ? 'Ground position verified — enables weather autofill and report anchoring'
+        : 'Not acquired — report is location-unanchored (still valid)'
+    },
+    {
+      label: 'Cloud Type',
+      val: cloudType || null,
+      src: cloudType ? 'manual' : null,
+      impact: 'MED',
+      note: cloudType
+        ? 'LCL formula applies best to cumulus-family clouds under convective conditions'
+        : 'Unknown — confidence penalty applied; select if visible'
+    },
+    {
+      label: 'Elevation Angle',
+      val: elevAng ? elevAng + '°' : null,
+      src: elevAng ? 'manual' : null,
+      impact: 'MED',
+      note: elevAng
+        ? '±5–10° naked eye / ±1–3° phone inclinometer — use phone app for best results'
+        : 'Not entered — trigonometric altitude estimate unavailable'
+    },
+    {
+      label: 'Horizontal Range',
+      val: horizDist ? horizDist + ' ' + document.getElementById('dist-units').value : null,
+      src: horizDist ? 'manual' : null,
+      impact: 'LOW',
+      note: horizDist
+        ? 'Visual estimate carries ±50% uncertainty — the largest error source in single-observer trig'
+        : 'Not entered — no trigonometric altitude; cloud constraint still valid without it'
+    }
+  ];
+
+  const dotClass = (src, val, impact) => {
+    if (!val) return 'off';
+    if (src === 'station' || src === 'gps') return 'high';
+    return impact === 'HIGH' ? 'med' : 'low';
+  };
+
+  const impactColor = i => i === 'HIGH' ? 'var(--amber)' : i === 'MED' ? 'var(--cyan)' : 'var(--text-muted)';
+
+  dqEl.innerHTML = `<div class="dq-title">// DATA QUALITY BREAKDOWN — WHAT IS DRIVING YOUR ESTIMATE</div>` +
+    rows.map(r => `
+      <div class="dq-row">
+        <div class="dq-dot ${dotClass(r.src, r.val, r.impact)}"></div>
+        <div class="dq-metric"><strong>${r.label}</strong>${r.val ? ' · ' + r.val : ''}</div>
+        <div class="dq-note">${r.note}</div>
+        <div class="dq-impact" style="color:${impactColor(r.impact)}">${r.impact}</div>
+      </div>
+    `).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+// ELEVATION NEEDLE
+// ══════════════════════════════════════════════════════════
+function updateNeedle() {
+  const ang = parseFloat(document.getElementById('elev-angle').value) || 0;
+  const rot = 90 - Math.min(90, Math.max(0, ang));
+  document.getElementById('elev-needle').style.transform = `translateX(-50%) rotate(${rot}deg)`;
+  document.getElementById('elev-label').textContent = ang + '°';
+}
+
+// ══════════════════════════════════════════════════════════
+// TRIANGULATION
+// ══════════════════════════════════════════════════════════
+function triCompute() {
+  const elevAng   = parseFloat(document.getElementById('elev-angle').value);
+  const horizDist = parseFloat(document.getElementById('horiz-dist').value);
+  const angSize   = parseFloat(document.getElementById('ang-size').value);
+  const distUnits = document.getElementById('dist-units').value;
+  const cloudRel  = document.getElementById('cloud-relation').value;
+  const obsElev   = parseFloat(document.getElementById('elev').value) || 0;
+  const cbInput   = document.getElementById('tri-cloud-base').value;
+  const T  = parseFloat(document.getElementById('temp').value);
+  const Td = parseFloat(document.getElementById('dewpt').value);
+  const uF = document.getElementById('units').value === 'F';
+  let cloudBase = parseFloat(cbInput) || ((!isNaN(T) && !isNaN(Td)) ? (uF ? (T-Td)/4.4*1000 : (T-Td)/2.5*1000) : null);
+
+  if (isNaN(elevAng)) return;
+  document.getElementById('tri-results').style.display = 'block';
+
+  const elevRad = elevAng * Math.PI / 180;
+  const unit_str = uF ? 'feet' : 'meters';
+
+  let dHoriz_ft = null;
+  if (!isNaN(horizDist)) {
+    const toFeet = { miles: 5280, km: 3280.84, ft: 1, m: 3.28084 };
+    dHoriz_ft = horizDist * toFeet[distUnits];
+    if (!uF) dHoriz_ft = dHoriz_ft / 3.28084;
+  }
+
+  let altAGL = null, physSize = null;
+  if (dHoriz_ft !== null && elevAng > 0) {
+    altAGL = dHoriz_ft * Math.tan(elevRad);
+    const dSlant = dHoriz_ft / Math.cos(elevRad);
+    if (!isNaN(angSize) && angSize > 0) {
+      physSize = 2 * dSlant * Math.tan(angSize * Math.PI / 180 / 2);
+    }
+  }
+
+  let constraintText = '—', constraintNote = '';
+  if (cloudBase && cloudRel !== 'unknown') {
+    if (cloudRel === 'below') { constraintText = `< ${Math.round(cloudBase).toLocaleString()}`; constraintNote = unit_str + ' (bounded above by cloud base)'; }
+    else if (cloudRel === 'at') { constraintText = `≈ ${Math.round(cloudBase).toLocaleString()}`; constraintNote = unit_str + ' (approximately at LCL)'; }
+    else if (cloudRel === 'above') { constraintText = `> ${Math.round(cloudBase).toLocaleString()}`; constraintNote = unit_str + ' (bounded below by cloud base)'; }
+    else if (cloudRel === 'through') { constraintText = `~ ${Math.round(cloudBase).toLocaleString()}`; constraintNote = unit_str + ' ± uncertainty (transited cloud boundary)'; }
+  }
+
+  document.getElementById('t-alt').textContent    = altAGL ? Math.round(altAGL).toLocaleString() : '—';
+  document.getElementById('t-alt-unit').textContent = unit_str + ' AGL';
+  document.getElementById('t-msl').textContent    = altAGL ? Math.round(altAGL + obsElev).toLocaleString() : '—';
+  document.getElementById('t-constraint').textContent = constraintText;
+  document.getElementById('t-constraint-note').textContent = constraintNote;
+  document.getElementById('t-size').textContent   = physSize ? Math.round(physSize).toLocaleString() : '—';
+  document.getElementById('t-size-unit').textContent = unit_str + ' across';
+
+  drawTriViz(elevAng, altAGL, cloudBase, dHoriz_ft, uF);
+}
+
+function baselineCompute() {
+  const ang1   = parseFloat(document.getElementById('elev-angle').value);
+  const ang2   = parseFloat(document.getElementById('obs2-elev').value);
+  const bDist  = parseFloat(document.getElementById('baseline').value);
+  const bUnits = document.getElementById('baseline-units').value;
+  const uF     = document.getElementById('units').value === 'F';
+  if (isNaN(ang1) || isNaN(ang2) || isNaN(bDist)) return;
+  const b_ft = bDist * (bUnits === 'miles' ? 5280 : 3280.84);
+  const b = uF ? b_ft : b_ft / 3.28084;
+  const t1 = Math.tan(ang1 * Math.PI / 180), t2 = Math.tan(ang2 * Math.PI / 180);
+  const H = b * (t1 * t2) / (t1 + t2);
+  document.getElementById('baseline-result').style.display = 'block';
+  document.getElementById('b-alt').textContent = Math.round(H).toLocaleString();
+  document.getElementById('b-unit').textContent = (uF ? 'feet' : 'meters') + ' AGL';
+}
+
+// ══════════════════════════════════════════════════════════
+// TRIANGULATION VISUALIZATION
+// ══════════════════════════════════════════════════════════
+function drawTriViz(elevAng, altAGL, cloudBase, dHoriz, isFt) {
+  const canvas = document.getElementById('tri-canvas');
+  const W = canvas.parentElement.offsetWidth;
+  const H_c = 200;
+  canvas.width = W; canvas.height = H_c;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H_c);
+  const grad = ctx.createLinearGradient(0, 0, 0, H_c);
+  grad.addColorStop(0, '#050810'); grad.addColorStop(1, '#0a1525');
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H_c);
+
+  const margin = 40, groundY = H_c - 30;
+  const maxAlt = cloudBase ? cloudBase * 1.4 : (altAGL ? altAGL * 1.5 : 5000);
+  const scale = (groundY - margin) / maxAlt;
+
+  if (cloudBase) {
+    const cy = groundY - cloudBase * scale;
+    ctx.setLineDash([4, 6]); ctx.strokeStyle = 'rgba(40,180,200,0.5)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(margin, cy); ctx.lineTo(W - margin, cy); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(40,180,200,0.7)'; ctx.font = '9px Space Mono';
+    ctx.fillText('CLOUD BASE ~' + Math.round(cloudBase).toLocaleString() + (isFt ? 'ft' : 'm'), margin + 4, cy - 4);
+  }
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(margin, groundY); ctx.lineTo(W - margin, groundY); ctx.stroke();
+
+  const obsX = margin + 20;
+  ctx.fillStyle = '#e8a020'; ctx.beginPath(); ctx.arc(obsX, groundY, 5, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'rgba(232,160,32,0.5)'; ctx.font = '9px Space Mono'; ctx.fillText('OBS', obsX - 10, groundY + 16);
+
+  if (altAGL && dHoriz) {
+    const objX = obsX + dHoriz * scale * 0.6;
+    const objY = groundY - altAGL * scale;
+    ctx.strokeStyle = 'rgba(232,160,32,0.6)'; ctx.lineWidth = 1.5; ctx.setLineDash([3, 4]);
+    ctx.beginPath(); ctx.moveTo(obsX, groundY); ctx.lineTo(Math.min(objX, W - margin), Math.max(objY, margin)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 1; ctx.setLineDash([3, 6]);
+    ctx.beginPath(); ctx.moveTo(obsX, groundY); ctx.lineTo(Math.min(objX, W - margin), groundY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(Math.min(objX, W - margin), groundY); ctx.lineTo(Math.min(objX, W - margin), Math.max(objY, margin)); ctx.stroke();
+    ctx.setLineDash([]);
+    const ox = Math.min(objX, W - margin), oy = Math.max(objY, margin);
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(ox, oy, 5, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fill();
+    ctx.strokeStyle = 'rgba(232,160,32,0.8)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(obsX, groundY, 20, -Math.PI/2, -(elevAng * Math.PI / 180) - Math.PI/2, true); ctx.stroke();
+    ctx.fillStyle = 'rgba(232,160,32,0.7)'; ctx.font = '9px Space Mono';
+    ctx.fillText(elevAng + '°', obsX + 24, groundY - 4);
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// OBSERVER PORTRAIT CANVAS
+// ══════════════════════════════════════════════════════════
+function drawPortrait() {
+  const canvas = document.getElementById('portrait-canvas');
+  if (!canvas) return;
+  const W = canvas.parentElement.offsetWidth || 700;
+  const H = 420;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  // Background
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, '#03050a');
+  bg.addColorStop(0.6, '#060a12');
+  bg.addColorStop(1, '#080d18');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle grid
+  ctx.strokeStyle = 'rgba(30,48,64,0.25)'; ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 48) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 48) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+  const T   = parseFloat(document.getElementById('temp').value);
+  const Td  = parseFloat(document.getElementById('dewpt').value);
+  const uF  = document.getElementById('units').value === 'F';
+  const obsElev = parseFloat(document.getElementById('elev').value) || 0;
+  const elevAng = parseFloat(document.getElementById('elev-angle').value);
+  const azimuth = parseFloat(document.getElementById('azimuth').value);
+  const horizDist = parseFloat(document.getElementById('horiz-dist').value);
+  const distUnits = document.getElementById('dist-units').value;
+  const cloudRel = document.getElementById('cloud-relation').value;
+
+  let cloudBase = null;
+  if (!isNaN(T) && !isNaN(Td)) {
+    cloudBase = uF ? ((T - Td) / 4.4) * 1000 : ((T - Td) / 2.5) * 1000;
+  }
+
+  let altAGL = null;
+  if (!isNaN(elevAng) && !isNaN(horizDist)) {
+    const toFt = { miles: 5280, km: 3280.84, ft: 1, m: 3.28084 };
+    const d = horizDist * toFt[distUnits];
+    const dConv = uF ? d : d / 3.28084;
+    altAGL = dConv * Math.tan(elevAng * Math.PI / 180);
+  }
+
+  // Layout: left = sky cross-section, right = metadata panel
+  const groundY = H - 60;
+  const skyTop  = 30;
+  const splitX  = W * 0.65;
+  const margin  = 30;
+
+  // ── Ground line ──
+  ctx.strokeStyle = 'rgba(74,96,112,0.4)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(margin, groundY); ctx.lineTo(splitX - 10, groundY); ctx.stroke();
+
+  // Surface hatch
+  ctx.strokeStyle = 'rgba(42,58,72,0.4)'; ctx.lineWidth = 1;
+  for (let x = margin; x < splitX - 10; x += 14) {
+    ctx.beginPath(); ctx.moveTo(x, groundY); ctx.lineTo(x - 8, groundY + 10); ctx.stroke();
+  }
+
+  // ── Cloud base ceiling ──
+  if (cloudBase !== null) {
+    const maxAlt = cloudBase * 1.5 || 5000;
+    const scale = (groundY - skyTop) / maxAlt;
+    const cy = groundY - cloudBase * scale;
+
+    // Cloud band
+    const cloudGrad = ctx.createLinearGradient(0, cy - 14, 0, cy + 14);
+    cloudGrad.addColorStop(0, 'rgba(40,180,200,0)');
+    cloudGrad.addColorStop(0.5, 'rgba(40,180,200,0.08)');
+    cloudGrad.addColorStop(1, 'rgba(40,180,200,0)');
+    ctx.fillStyle = cloudGrad;
+    ctx.fillRect(margin, cy - 14, splitX - 10 - margin, 28);
+
+    ctx.setLineDash([5, 7]); ctx.strokeStyle = 'rgba(40,180,200,0.55)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(margin, cy); ctx.lineTo(splitX - 10, cy); ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = 'rgba(40,180,200,0.8)'; ctx.font = 'bold 9px Space Mono';
+    ctx.fillText('CLOUD BASE LCL — ~' + Math.round(cloudBase).toLocaleString() + (uF ? ' ft' : ' m') + ' AGL', margin + 4, cy - 5);
+
+    // Uncertainty band (±5%)
+    const uncH = cloudBase * 0.05 * scale;
+    ctx.fillStyle = 'rgba(40,180,200,0.05)';
+    ctx.fillRect(margin, cy - uncH, splitX - 10 - margin, uncH * 2);
+
+    // Observer dot
+    const obsX = margin + 24;
+    const obsGlow = ctx.createRadialGradient(obsX, groundY, 0, obsX, groundY, 12);
+    obsGlow.addColorStop(0, 'rgba(232,160,32,0.8)');
+    obsGlow.addColorStop(1, 'rgba(232,160,32,0)');
+    ctx.fillStyle = obsGlow;
+    ctx.beginPath(); ctx.arc(obsX, groundY, 12, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#e8a020'; ctx.beginPath(); ctx.arc(obsX, groundY, 4, 0, Math.PI * 2); ctx.fill();
+
+    // GPS indicator
+    if (gpsData) {
+      const gpsGlow = ctx.createRadialGradient(obsX, groundY, 0, obsX, groundY, 18);
+      gpsGlow.addColorStop(0, 'rgba(46,204,113,0)');
+      gpsGlow.addColorStop(0.7, 'rgba(46,204,113,0.2)');
+      gpsGlow.addColorStop(1, 'rgba(46,204,113,0)');
+      ctx.fillStyle = gpsGlow; ctx.beginPath(); ctx.arc(obsX, groundY, 18, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(46,204,113,0.7)'; ctx.font = '8px Space Mono';
+      ctx.fillText('GPS ✓', obsX - 12, groundY + 18);
+    }
+
+    // Elevation angle ray
+    if (!isNaN(elevAng)) {
+      const rayLen = Math.min(300, (splitX - 10 - obsX - 10));
+      const angleRad = elevAng * Math.PI / 180;
+      const rayEndX = obsX + rayLen * Math.cos(angleRad);
+      const rayEndY = groundY - rayLen * Math.sin(angleRad);
+
+      // Uncertainty cone (±8°)
+      const unc = 8 * Math.PI / 180;
+      ctx.beginPath();
+      ctx.moveTo(obsX, groundY);
+      ctx.lineTo(obsX + rayLen * Math.cos(angleRad - unc), groundY - rayLen * Math.sin(angleRad - unc));
+      ctx.lineTo(obsX + rayLen * Math.cos(angleRad + unc), groundY - rayLen * Math.sin(angleRad + unc));
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(232,160,32,0.07)'; ctx.fill();
+
+      // Ray
+      ctx.strokeStyle = 'rgba(232,160,32,0.8)'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 5]);
+      ctx.beginPath(); ctx.moveTo(obsX, groundY); ctx.lineTo(rayEndX, rayEndY); ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Angle arc
+      ctx.strokeStyle = 'rgba(232,160,32,0.5)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(obsX, groundY, 28, -Math.PI/2, -angleRad - Math.PI/2, true); ctx.stroke();
+      ctx.fillStyle = 'rgba(232,160,32,0.9)'; ctx.font = 'bold 10px Space Mono';
+      ctx.fillText(elevAng.toFixed(0) + '°', obsX + 32, groundY - 6);
+
+      // Object estimate
+      if (altAGL !== null) {
+        const objY = groundY - altAGL * scale;
+        const objX = Math.min(rayEndX, splitX - 20);
+        const clamped = Math.max(objY, skyTop + 10);
+
+        // Altitude bracket line
+        ctx.strokeStyle = 'rgba(232,160,32,0.2)'; ctx.lineWidth = 1; ctx.setLineDash([2, 5]);
+        ctx.beginPath(); ctx.moveTo(objX, groundY); ctx.lineTo(objX, clamped); ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Cloud constraint color
+        let objColor = 'rgba(255,255,255,0.85)';
+        if (cloudRel === 'below') objColor = 'rgba(80,200,120,0.9)';
+        else if (cloudRel === 'above') objColor = 'rgba(192,80,160,0.9)';
+        else if (cloudRel === 'through') objColor = 'rgba(40,180,200,0.9)';
+
+        const objGlow = ctx.createRadialGradient(objX, clamped, 0, objX, clamped, 14);
+        objGlow.addColorStop(0, objColor.replace('0.9','0.4').replace('0.85','0.3'));
+        objGlow.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = objGlow; ctx.beginPath(); ctx.arc(objX, clamped, 14, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = objColor; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(objX, clamped, 6, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = objColor.replace('0.85','0.5').replace('0.9','0.3');
+        ctx.fill();
+
+        ctx.fillStyle = 'rgba(200,216,224,0.75)'; ctx.font = '9px Space Mono';
+        ctx.fillText('~' + Math.round(altAGL).toLocaleString() + (uF ? 'ft' : 'm'), objX + 9, clamped - 4);
+      }
+    }
+  } else {
+    // No atmospheric data — show prompt
+    const obsX = margin + 24;
+    ctx.fillStyle = '#e8a020'; ctx.beginPath(); ctx.arc(obsX, groundY, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(232,160,32,0.35)'; ctx.font = '11px Courier Prime, monospace';
+    ctx.fillText('Enter temperature & dew point on Observe tab to build your portrait.', margin, groundY - 24);
+  }
+
+  // ── Azimuth compass rose ──
+  const compassX = splitX - 70, compassY = skyTop + 50;
+  if (!isNaN(azimuth)) {
+    ctx.strokeStyle = 'rgba(30,48,64,0.6)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(compassX, compassY, 30, 0, Math.PI * 2); ctx.stroke();
+    const az = (azimuth - 90) * Math.PI / 180; // rotate so 0° = north = up
+    ctx.strokeStyle = 'rgba(232,160,32,0.8)'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(compassX, compassY);
+    ctx.lineTo(compassX + 26 * Math.cos(az), compassY + 26 * Math.sin(az));
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(74,96,112,0.7)'; ctx.font = '8px Space Mono';
+    ctx.fillText('N', compassX - 3, compassY - 33);
+    ctx.fillStyle = 'rgba(232,160,32,0.6)'; ctx.font = '9px Space Mono';
+    ctx.fillText(azimuth.toFixed(0) + '°', compassX - 10, compassY + 46);
+  }
+
+  // ── Right panel — metadata card ──
+  const panelX = splitX + 8;
+  const panelW = W - panelX - margin;
+
+  ctx.fillStyle = 'rgba(13,17,23,0.7)';
+  ctx.fillRect(panelX, skyTop, panelW, H - skyTop - margin + 20);
+  ctx.strokeStyle = 'rgba(30,48,64,0.6)'; ctx.lineWidth = 1;
+  ctx.strokeRect(panelX, skyTop, panelW, H - skyTop - margin + 20);
+
+  // Header
+  ctx.fillStyle = 'rgba(232,160,32,0.08)';
+  ctx.fillRect(panelX, skyTop, panelW, 28);
+  ctx.fillStyle = 'var(--amber)'; ctx.font = 'bold 11px Bebas Neue, sans-serif';
+  ctx.fillStyle = '#e8a020'; ctx.font = '11px Space Mono';
+  ctx.letterSpacing = '2px';
+  ctx.fillText('OBSERVER RECORD', panelX + 10, skyTop + 17);
+
+  const px = panelX + 10;
+  let py = skyTop + 38;
+  const lineH = 19;
+
+  const meta = [
+    ['DATE', document.getElementById('obs-date').value || '—'],
+    ['TIME', document.getElementById('obs-time').value || '—'],
+    ['LOCATION', gpsData ? (gpsData.place || 'GPS acquired').slice(0, 20) : '— not anchored'],
+    ['GPS', gpsData ? '±' + Math.round(gpsData.accuracy) + 'm' : '— not acquired'],
+    ['', ''],
+    ['TEMP', !isNaN(T) ? T + (uF ? '°F' : '°C') : '—'],
+    ['DEW PT', !isNaN(Td) ? Td + (uF ? '°F' : '°C') : '—'],
+    ['SRC', fieldSources['temp'] === 'station' ? 'OPEN-METEO' : 'MANUAL'],
+    ['', ''],
+    ['CLOUD TYPE', cloudType || '—'],
+    ['ELEV ANG', !isNaN(elevAng) ? elevAng + '°' : '—'],
+    ['AZIMUTH', !isNaN(azimuth) ? azimuth + '°' : '—'],
+    ['', ''],
+    ['CLOUD BASE', cloudBase !== null ? '~' + Math.round(cloudBase).toLocaleString() + (uF ? 'ft' : 'm') : '—'],
+    ['OBJ ALT', altAGL !== null ? '~' + Math.round(altAGL).toLocaleString() + (uF ? 'ft' : 'm') : '—'],
+    ['CONSTRAINT', cloudRel !== 'unknown' ? cloudRel.toUpperCase() : '—'],
+  ];
+
+  meta.forEach(([label, val]) => {
+    if (!label && !val) { py += 6; return; }
+    ctx.fillStyle = 'rgba(74,96,112,0.9)'; ctx.font = '8px Space Mono';
+    ctx.fillText(label, px, py);
+    ctx.fillStyle = val === '—' ? 'rgba(42,58,72,0.9)' : 'rgba(255,190,74,0.9)';
+    ctx.font = '9px Space Mono';
+    ctx.fillText(val, px + 72, py);
+    py += lineH;
+  });
+
+  // Confidence bar
+  const T_chk  = parseFloat(document.getElementById('temp').value);
+  const Td_chk = parseFloat(document.getElementById('dewpt').value);
+  if (!isNaN(T_chk) && !isNaN(Td_chk)) {
+    const confPctEl = document.getElementById('conf-pct');
+    const confPct = confPctEl ? parseInt(confPctEl.textContent) || 0 : 0;
+    py += 6;
+    ctx.fillStyle = 'rgba(74,96,112,0.7)'; ctx.font = '8px Space Mono';
+    ctx.fillText('CONFIDENCE', px, py);
+    ctx.fillStyle = 'rgba(42,58,72,0.7)';
+    ctx.fillRect(px, py + 4, panelW - 20, 6);
+    const fill = (confPct / 100) * (panelW - 20);
+    const confGrad = ctx.createLinearGradient(px, 0, px + fill, 0);
+    confGrad.addColorStop(0, '#7a5010');
+    confGrad.addColorStop(1, '#ffbe4a');
+    ctx.fillStyle = confGrad;
+    ctx.fillRect(px, py + 4, fill, 6);
+    ctx.fillStyle = '#ffbe4a'; ctx.font = 'bold 9px Space Mono';
+    ctx.fillText(confPct + '%', px + panelW - 36, py);
+  }
+
+  // Watermark
+  ctx.fillStyle = 'rgba(30,48,64,0.5)'; ctx.font = '8px Space Mono';
+  ctx.fillText('SKYANCHOR · SOVEREIGNSKIES · ' + new Date().toISOString().slice(0,10), margin, H - 8);
+}
+
+function downloadPortrait() {
+  drawPortrait();
+  const canvas = document.getElementById('portrait-canvas');
+  const link = document.createElement('a');
+  link.download = 'skyanchor-portrait-' + new Date().toISOString().slice(0,10) + '.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+function copyPortraitLink() {
+  const T   = document.getElementById('temp').value;
+  const Td  = document.getElementById('dewpt').value;
+  const ang = document.getElementById('elev-angle').value;
+  const date = document.getElementById('obs-date').value;
+  const loc = gpsData ? (gpsData.place || 'GPS-anchored') : 'location not recorded';
+  const txt = `[SkyAnchor Observation — ${date} · ${loc}]\n` +
+    `Temp: ${T||'—'} · Dew Pt: ${Td||'—'} · Elev Angle: ${ang||'—'}°\n` +
+    `Cloud type: ${cloudType||'—'} · Cloud relation: ${document.getElementById('cloud-relation').value}\n` +
+    `Tool: SkyAnchor v2 · SovereignSkies Edition`;
+  navigator.clipboard.writeText(txt).then(() => {
+    alert('Observation summary copied to clipboard.');
+  }).catch(() => {
+    prompt('Copy this text:', txt);
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// GPS
+// ══════════════════════════════════════════════════════════
+function requestGPS() {
+  const status = document.getElementById('gps-status');
+  if (!navigator.geolocation) {
+    status.textContent = '✗ Geolocation not supported in this browser.';
+    status.style.color = 'var(--red)'; return;
+  }
+  status.textContent = '◌ Acquiring position — please allow location access...';
+  status.style.color = 'var(--amber-dim)';
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const { latitude, longitude, altitude, accuracy, altitudeAccuracy } = pos.coords;
+      const ts = new Date(pos.timestamp).toISOString();
+      gpsData = { latitude, longitude, altitude, accuracy, altitudeAccuracy, timestamp: ts };
+
+      document.getElementById('gps-lat').value      = latitude.toFixed(6) + '°';
+      document.getElementById('gps-lon').value      = longitude.toFixed(6) + '°';
+      document.getElementById('gps-alt-raw').value  = altitude
+        ? altitude.toFixed(1) + ' m (±' + (altitudeAccuracy ? altitudeAccuracy.toFixed(0) : '?') + ' m)'
+        : 'Not available';
+      document.getElementById('gps-accuracy').value = '±' + accuracy.toFixed(0) + ' m horizontal';
+      document.getElementById('gps-timestamp').value = ts.replace('T',' ').slice(0,19) + ' UTC';
+
+      status.textContent = '✓ Position acquired — ' + accuracy.toFixed(0) + ' m accuracy';
+      status.style.color = 'var(--green)';
+
+      document.getElementById('gps-place').value = 'Looking up...';
+      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&zoom=10`, {
+        headers: { 'Accept-Language': 'en' }
+      })
+      .then(r => r.json())
+      .then(d => {
+        const addr = d.address || {};
+        const place = [addr.city||addr.town||addr.village||'', addr.county||'', addr.state||'', addr.country_code?.toUpperCase()||'']
+          .filter(Boolean).join(', ');
+        document.getElementById('gps-place').value = place || d.display_name?.split(',').slice(0,3).join(',') || 'Unknown';
+        gpsData.place = place;
+      })
+      .catch(() => { document.getElementById('gps-place').value = 'Reverse geocode unavailable'; });
+
+      document.getElementById('gps-apply-btn').style.display = 'inline-block';
+      document.getElementById('wx-fetch-btn').style.display = 'inline-block';
+      document.getElementById('gps-clear-btn').style.display = 'inline-block';
+    },
+    (err) => {
+      const msgs = { 1: 'Permission denied.', 2: 'Position unavailable.', 3: 'Timeout.' };
+      status.textContent = '✗ ' + (msgs[err.code] || err.message);
+      status.style.color = 'var(--red)';
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+  );
+}
+
+function applyGPSToForm() {
+  if (!gpsData) return;
+  const now = new Date();
+  if (!document.getElementById('obs-time').value)
+    document.getElementById('obs-time').value = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  if (!document.getElementById('obs-date').value || document.getElementById('obs-date').value === new Date().toISOString().slice(0,10))
+    document.getElementById('obs-date').value = now.toISOString().slice(0,10);
+
+  if (gpsData.altitude) {
+    const uF = document.getElementById('units').value === 'F';
+    document.getElementById('elev').value = uF ? Math.round(gpsData.altitude * 3.28084) : Math.round(gpsData.altitude);
+    setFieldBadge('elev', 'gps');
+    computeLive();
+  }
+
+  const locStr = (gpsData.place ? gpsData.place + ' · ' : '') +
+    gpsData.latitude.toFixed(5) + '°, ' + gpsData.longitude.toFixed(5) + '°';
+  document.getElementById('obs-location').value = locStr;
+
+  document.getElementById('gps-status').textContent = '✓ Applied — elevation, time, date, location updated.';
+  document.getElementById('gps-status').style.color = 'var(--green)';
+}
+
+function clearGPS() {
+  gpsData = null;
+  ['gps-lat','gps-lon','gps-alt-raw','gps-accuracy','gps-timestamp','gps-place'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('gps-status').textContent = 'Location data cleared.';
+  document.getElementById('gps-status').style.color = 'var(--text-dim)';
+  ['gps-apply-btn','wx-fetch-btn','gps-clear-btn'].forEach(id => document.getElementById(id).style.display = 'none');
+  document.getElementById('wx-autofill-strip').style.display = 'none';
+}
+
+// ══════════════════════════════════════════════════════════
+// WEATHER AUTOFILL
+// ══════════════════════════════════════════════════════════
+async function fetchWeatherAutofill() {
+  if (!gpsData) return;
+  const strip = document.getElementById('wx-autofill-strip');
+  const statusEl = document.getElementById('wx-autofill-status');
+  const dataEl = document.getElementById('wx-autofill-data');
+  strip.style.display = 'block';
+  statusEl.textContent = '◌ Fetching local weather data from Open-Meteo...';
+  statusEl.style.color = 'var(--amber-dim)';
+  dataEl.style.display = 'none';
+
+  try {
+    const { latitude: lat, longitude: lon } = gpsData;
+    const uF = document.getElementById('units').value === 'F';
+    const tempUnit = uF ? 'fahrenheit' : 'celsius';
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+      `&current=temperature_2m,dewpoint_2m,precipitation,cloudcover,visibility,weathercode` +
+      `&temperature_unit=${tempUnit}&wind_speed_unit=mph&timezone=auto&forecast_days=1`;
+
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    const cur = data.current;
+    if (!cur) throw new Error('No current data in response');
+
+    const temp = cur.temperature_2m;
+    const dew  = cur.dewpoint_2m;
+    const cloudCoverPct = cur.cloudcover || 0;
+    const visMi = cur.visibility ? (cur.visibility / 1609.34).toFixed(1) : null;
+
+    // Fill fields if empty (don't overwrite user-entered values)
+    const tempEl = document.getElementById('temp');
+    const dewEl  = document.getElementById('dewpt');
+    if (!tempEl.value) { tempEl.value = temp.toFixed(1); setFieldBadge('temp', 'station'); }
+    if (!dewEl.value)  { dewEl.value  = dew.toFixed(1);  setFieldBadge('dewpt', 'station'); }
+
+    // Set wx-source if empty
+    const wxSrcEl = document.getElementById('wx-source');
+    if (!wxSrcEl.value)
+      wxSrcEl.value = `Open-Meteo API · GPS (${lat.toFixed(4)}°, ${lon.toFixed(4)}°)`;
+
+    statusEl.textContent = `✓ Weather loaded from Open-Meteo`;
+    statusEl.style.color = 'var(--green)';
+    dataEl.style.display = 'block';
+    dataEl.innerHTML =
+      `Temp: <strong style="color:var(--amber-glow)">${temp.toFixed(1)}${uF?'°F':'°C'}</strong>&nbsp;&nbsp;` +
+      `Dew Pt: <strong style="color:var(--amber-glow)">${dew.toFixed(1)}${uF?'°F':'°C'}</strong>&nbsp;&nbsp;` +
+      `Cloud Cover: <strong style="color:var(--cyan)">${cloudCoverPct}%</strong>&nbsp;&nbsp;` +
+      (visMi ? `Visibility: <strong style="color:var(--cyan)">${visMi} mi</strong>` : '') +
+      `<br><span style="color:var(--text-muted);font-size:9px">Model-interpolated from nearest stations · ±1–3° typical · ${new Date().toUTCString().slice(5,22)} UTC</span>`;
+
+    computeLive();
+  } catch(e) {
+    statusEl.textContent = '✗ Could not fetch weather data: ' + e.message + ' — enter manually or try again.';
+    statusEl.style.color = 'var(--red)';
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// REPORT GENERATION
+// ══════════════════════════════════════════════════════════
+function generateReport() {
+  const T   = document.getElementById('temp').value;
+  const Td  = document.getElementById('dewpt').value;
+  const units = document.getElementById('units').value;
+  const elev  = document.getElementById('elev').value || '0';
+  const date  = document.getElementById('obs-date').value || '[DATE NOT RECORDED]';
+  const time  = document.getElementById('obs-time').value || '[TIME NOT RECORDED]';
+  const cover = document.getElementById('cloud-cover').options[document.getElementById('cloud-cover').selectedIndex].text;
+  const vis   = document.getElementById('visibility').value;
+  const notes = document.getElementById('obs-notes').value;
+  const obsID = document.getElementById('observer-id').value || '[ANONYMOUS]';
+  const loc   = document.getElementById('obs-location').value || '[LOCATION NOT RECORDED]';
+  const equip = document.getElementById('equipment').value || '[NOT RECORDED]';
+  const wxSrc = document.getElementById('wx-source').value || '[NOT RECORDED]';
+  const elevAng = document.getElementById('elev-angle').value;
+  const azimuth = document.getElementById('azimuth').value;
+  const angSize = document.getElementById('ang-size').value;
+  const duration = document.getElementById('duration').value;
+  const objDesc = document.getElementById('obj-description').value;
+  const cloudRel = document.getElementById('cloud-relation').options[document.getElementById('cloud-relation').selectedIndex].text;
+  const uF = units === 'F';
+
+  let cloudBaseAGL = '', spreadStr = '';
+  if (T && Td) {
+    const sp = parseFloat(T) - parseFloat(Td);
+    const h = uF ? (sp / 4.4) * 1000 : (sp / 2.5) * 1000;
+    cloudBaseAGL = Math.round(h).toLocaleString() + (uF ? ' ft' : ' m') + ' AGL';
+    spreadStr = sp.toFixed(1) + (uF ? '°F' : '°C');
+  }
+
+  let altEstimate = '';
+  if (elevAng && document.getElementById('horiz-dist').value) {
+    const h = parseFloat(document.getElementById('horiz-dist').value);
+    const toFt = { miles:5280, km:3280.84, ft:1, m:3.28084 };
+    const d = uF ? h * toFt[document.getElementById('dist-units').value] : h * toFt[document.getElementById('dist-units').value] / 3.28084;
+    const alt = d * Math.tan(parseFloat(elevAng) * Math.PI / 180);
+    altEstimate = Math.round(alt).toLocaleString() + (uF ? ' ft' : ' m') + ' AGL (single-observer trig)';
+  }
+
+  const tempSrc = fieldSources['temp'] === 'station' ? 'Open-Meteo API (GPS-located)' : 'manually entered';
+  const dewSrc  = fieldSources['dewpt'] === 'station' ? 'Open-Meteo API (GPS-located)' : 'manually entered';
+  const gpsSec  = gpsData ? `
+GPS ANCHOR DATA
+────────────────────────────────────
+Latitude         : ${gpsData.latitude.toFixed(6)}°
+Longitude        : ${gpsData.longitude.toFixed(6)}°
+GPS Altitude     : ${gpsData.altitude ? gpsData.altitude.toFixed(1) + ' m' : 'Not available'}
+Horizontal Acc.  : ±${gpsData.accuracy.toFixed(0)} m
+Fix Timestamp    : ${gpsData.timestamp}
+Approx. Location : ${gpsData.place || 'Not resolved'}
+Coordinate Format: WGS84 decimal degrees
+` : 'GPS ANCHOR: Not acquired — observation unanchored spatially\n';
+
+  const confPct = document.getElementById('conf-pct')?.textContent || '—';
+
+  const report = `══════════════════════════════════════════════════════════
+SKYANCHOR — SOVEREIGNSKIES OBSERVER REPORT
+Generated: ${new Date().toISOString()}
+Observer Tool: SkyAnchor v2 · SovereignSkies Edition
+══════════════════════════════════════════════════════════
+
+SECTION A — OBSERVER & CONDITIONS
+──────────────────────────────────
+Observer ID   : ${obsID}
+Location      : ${loc}
+Date / Time   : ${date} ${time}
+Equipment     : ${equip}
+Weather Source: ${wxSrc}
+
+SECTION B — GPS ANCHOR
+──────────────────────────────────
+${gpsSec}
+SECTION C — SURFACE THERMODYNAMICS
+────────────────────────────────────
+Air Temperature  : ${T || '[NOT RECORDED]'} ${uF?'°F':'°C'} (${tempSrc})
+Dew Point        : ${Td || '[NOT RECORDED]'} ${uF?'°F':'°C'} (${dewSrc})
+T–Td Spread      : ${spreadStr || '[INSUFFICIENT DATA]'}
+Observer Elevation: ${elev} ${uF?'feet':'meters'} MSL
+Cloud Type       : ${cloudType || '[NOT SELECTED]'}
+Cloud Cover      : ${cover}
+Visibility       : ${vis} miles
+
+SECTION D — COMPUTED CLOUD BASE
+─────────────────────────────────
+LCL Height AGL   : ${cloudBaseAGL || '[INSUFFICIENT DATA]'}
+Method           : Standard LCL formula [(T-Td)/${uF?'4.4':'2.5'}]×1000
+Uncertainty      : ±5–10% under convective conditions
+Estimate Confidence: ${confPct}
+
+SECTION E — OBSERVED PHENOMENON
+──────────────────────────────────
+Elevation Angle  : ${elevAng || '[NOT RECORDED]'}°
+Azimuth          : ${azimuth || '[NOT RECORDED]'}° (true north)
+Angular Size     : ${angSize || '[NOT RECORDED]'}°
+Duration         : ${duration || '[NOT RECORDED]'}
+Cloud Relation   : ${cloudRel}
+Estimated Altitude: ${altEstimate || '[INSUFFICIENT ANGULAR/RANGE DATA]'}
+
+Object Description:
+${objDesc || '[NO DESCRIPTION PROVIDED]'}
+
+SECTION F — ALTITUDE CONSTRAINTS
+──────────────────────────────────
+${cloudBaseAGL ? `Computed cloud base: ${cloudBaseAGL}
+Object/cloud relation: ${cloudRel}` : '[INSUFFICIENT ATMOSPHERIC DATA]'}
+
+Trigonometric altitude: ${altEstimate || 'insufficient data'}
+
+SECTION G — OBSERVER NOTES
+────────────────────────────
+${notes || '[NO ADDITIONAL NOTES]'}
+
+══════════════════════════════════════════════════════════
+METHODOLOGICAL NOTES
+──────────────────────────────────────────────────────────
+This report contains observational data and physical
+estimates derived from standard meteorological formulas.
+It does not contain identification claims.
+Cloud base estimate: LCL standard aviation formula.
+Range estimates carry ±50% uncertainty.
+Temperature/dew point: ±1–3°F if from Open-Meteo API.
+
+SkyAnchor · SovereignSkies Observer Network
+Open methodology. Public domain formulas.
+══════════════════════════════════════════════════════════`;
+
+  const out = document.getElementById('report-output');
+  out.textContent = report;
+  out.style.display = 'block';
+}
+
+function copyReport() {
+  const text = document.getElementById('report-output').textContent;
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target; btn.textContent = '[ COPIED ]';
+    setTimeout(() => btn.textContent = '[ COPY TO CLIPBOARD ]', 2000);
+  });
+}
+
+function downloadReport() {
+  const text = document.getElementById('report-output').textContent;
+  if (!text) return;
+  const blob = new Blob([text], {type: 'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'skyanchor-report-' + new Date().toISOString().slice(0,10) + '.txt';
+  a.click();
+}
+
+function submitFromReport() {
+  // Switch to sovereign tab and trigger submit
+  const sovTab = document.querySelector('.cyan-tab');
+  if (sovTab) sovTab.click();
+  setTimeout(() => {
+    const desc = document.getElementById('obj-description').value;
+    if (desc) document.getElementById('sov-desc').value = desc.slice(0,80);
+    submitSovereignObs();
+  }, 300);
+}
+
+// ══════════════════════════════════════════════════════════
+// SOVEREIGNSKIES
+// ══════════════════════════════════════════════════════════
+const SS_KEY = 'sovereignskies_v2';
+
+function getSovObs() {
+  try { return JSON.parse(localStorage.getItem(SS_KEY) || '[]'); }
+  catch { return []; }
+}
+
+function saveSovObs(arr) {
+  localStorage.setItem(SS_KEY, JSON.stringify(arr));
+}
+
+function submitSovereignObs() {
+  const statusEl = document.getElementById('sov-submit-status');
+  const T  = document.getElementById('temp').value;
+  const Td = document.getElementById('dewpt').value;
+  const units = document.getElementById('units').value;
+  const uF = units === 'F';
+  const elevAng  = document.getElementById('elev-angle').value;
+  const azimuth  = document.getElementById('azimuth').value;
+  const horizDist = document.getElementById('horiz-dist').value;
+  const distUnits = document.getElementById('dist-units').value;
+  const cloudRel  = document.getElementById('cloud-relation').value;
+  const obsType   = document.getElementById('sov-obs-type').value;
+  const confLevel = document.getElementById('sov-confidence').value;
+  const desc      = document.getElementById('sov-desc').value.trim();
+
+  let altAGL = null, cloudBase = null;
+  if (T && Td) {
+    const sp = parseFloat(T) - parseFloat(Td);
+    cloudBase = uF ? (sp/4.4)*1000 : (sp/2.5)*1000;
+  }
+  if (elevAng && horizDist) {
+    const toFt = {miles:5280,km:3280.84,ft:1,m:3.28084};
+    const d = parseFloat(horizDist) * toFt[distUnits];
+    const dConv = uF ? d : d / 3.28084;
+    altAGL = dConv * Math.tan(parseFloat(elevAng) * Math.PI / 180);
+  }
+
+  const obs = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+    ts: new Date().toISOString(),
+    lat: gpsData ? gpsData.latitude : null,
+    lon: gpsData ? gpsData.longitude : null,
+    place: gpsData ? gpsData.place : null,
+    altAGL: altAGL ? Math.round(altAGL) : null,
+    cloudBase: cloudBase ? Math.round(cloudBase) : null,
+    cloudType: cloudType || null,
+    elevAngle: elevAng ? parseFloat(elevAng) : null,
+    azimuth: azimuth ? parseFloat(azimuth) : null,
+    cloudRel, obsType, confLevel, desc, units,
+    wxSrc: fieldSources['temp'] === 'station' ? 'station' : 'manual',
+    gpsAnchored: !!gpsData
+  };
+
+  const all = getSovObs();
+  all.push(obs);
+  saveSovObs(all);
+
+  statusEl.style.color = 'var(--green)';
+  statusEl.textContent = `✓ Submitted — ID: ${obs.id}${obs.gpsAnchored ? ' · GPS-anchored' : ' · anonymous (no GPS)'}. Cluster map unlocked.`;
+
+  const btn = event && event.target ? event.target : document.querySelector('[onclick="submitSovereignObs()"]');
+  if (btn) { btn.textContent = '✓ SUBMITTED'; setTimeout(() => btn.textContent = '⊕ SUBMIT ANOTHER OBSERVATION', 3000); }
+
+  refreshSovereignUI();
+}
+
+function clearAllSovObs() {
+  if (!confirm('Clear all local SovereignSkies data? This cannot be undone.')) return;
+  localStorage.removeItem(SS_KEY);
+  refreshSovereignUI();
+  document.getElementById('sov-submit-status').textContent = 'Local observation data cleared.';
+  document.getElementById('sov-submit-status').style.color = 'var(--text-dim)';
+}
+
+function refreshSovereignUI() {
+  const obs = getSovObs();
+  const withGPS = obs.filter(o => o.lat && o.lon);
+
+  document.getElementById('my-obs-count').textContent  = obs.length;
+  document.getElementById('gps-obs-count').textContent = withGPS.length;
+
+  if (obs.length > 0) {
+    const confMap = { high: 90, medium: 65, low: 35 };
+    const avgConf = Math.round(obs.reduce((s,o) => s + (confMap[o.confLevel] || 50), 0) / obs.length);
+    document.getElementById('avg-conf-count').textContent = avgConf + '%';
+  } else {
+    document.getElementById('avg-conf-count').textContent = '—';
+  }
+
+  if (obs.length > 0) {
+    document.getElementById('cluster-gate').style.display = 'none';
+    document.getElementById('cluster-legend').style.display = 'block';
+    document.getElementById('recent-obs-section').style.display = 'block';
+    drawClusterMap(obs);
+    renderRecentObs(obs);
+  } else {
+    document.getElementById('cluster-gate').style.display = 'flex';
+    document.getElementById('cluster-legend').style.display = 'none';
+    document.getElementById('recent-obs-section').style.display = 'none';
+    drawClusterMapEmpty();
+  }
+}
+
+function drawClusterMapEmpty() {
+  const canvas = document.getElementById('cluster-canvas');
+  if (!canvas) return;
+  canvas.width = canvas.parentElement.offsetWidth || 600;
+  canvas.height = 380;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#030507'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  drawMapGrid(ctx, canvas.width, canvas.height);
+}
+
+function drawMapGrid(ctx, W, H) {
+  ctx.strokeStyle = 'rgba(30,48,64,0.3)'; ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+  ctx.fillStyle = 'rgba(30,48,64,0.25)'; ctx.font = '9px Space Mono';
+  ctx.fillText('N', W/2-3, 12); ctx.fillText('S', W/2-3, H-3);
+  ctx.fillText('W', 3, H/2+3); ctx.fillText('E', W-10, H/2+3);
+}
+
+function drawClusterMap(observations) {
+  const canvas = document.getElementById('cluster-canvas');
+  if (!canvas) return;
+  const W = canvas.parentElement.offsetWidth || 600;
+  const H = 380;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#030507'; ctx.fillRect(0, 0, W, H);
+  drawMapGrid(ctx, W, H);
+
+  const cX = W / 2, cY = H / 2;
+
+  // Range rings
+  [60, 120, 240].forEach((r, i) => {
+    const radii = [50, 110, 200];
+    const px = radii[i];
+    ctx.strokeStyle = 'rgba(30,48,64,0.35)'; ctx.setLineDash([3,5]);
+    ctx.beginPath(); ctx.arc(cX, cY, px, 0, Math.PI*2); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(74,96,112,0.4)'; ctx.font = '8px Space Mono';
+    ctx.fillText(r+'mi', cX + px + 3, cY + 3);
+  });
+
+  // Observer position glow
+  const obsGrad = ctx.createRadialGradient(cX, cY, 0, cX, cY, 16);
+  obsGrad.addColorStop(0, 'rgba(232,160,32,0.6)');
+  obsGrad.addColorStop(1, 'rgba(232,160,32,0)');
+  ctx.fillStyle = obsGrad; ctx.beginPath(); ctx.arc(cX, cY, 16, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#e8a020'; ctx.beginPath(); ctx.arc(cX, cY, 5, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = 'rgba(232,160,32,0.6)'; ctx.font = '8px Space Mono'; ctx.fillText('YOU', cX+8, cY-8);
+
+  // Plot observations
+  observations.forEach((obs, i) => {
+    const alt = obs.altAGL || obs.cloudBase;
+    let color;
+    if (!alt)          color = [74,96,112];
+    else if (alt < 5000)   color = [80,96,192];
+    else if (alt < 20000)  color = [40,180,200];
+    else if (alt < 60000)  color = [192,80,160];
+    else                   color = [224,64,64];
+
+    const [r,g,b] = color;
+    const confMap = { high: 1.0, medium: 0.7, low: 0.45 };
+    const alpha = confMap[obs.confLevel] || 0.6;
+    const radius = obs.gpsAnchored ? 8 : 6;
+
+    let px, py;
+    if (obs.lat && obs.lon && gpsData) {
+      // Real GPS-relative position
+      const dLat = (obs.lat - gpsData.latitude) * 111000;
+      const dLon = (obs.lon - gpsData.longitude) * 111000 * Math.cos(gpsData.latitude * Math.PI/180);
+      const pixPerMeter = 200 / (200 * 1609); // 200px = 200mi
+      px = cX + dLon * pixPerMeter * (W/2) / 200;
+      py = cY - dLat * pixPerMeter * (H/2) / 200;
+    } else if (obs.azimuth != null) {
+      // Use azimuth if known
+      const dist = (0.15 + Math.random() * 0.3) * Math.min(W,H) * 0.4;
+      const ang = (obs.azimuth - 90) * Math.PI / 180;
+      px = cX + Math.cos(ang) * dist;
+      py = cY + Math.sin(ang) * dist;
+    } else {
+      const ang = (i / observations.length) * Math.PI * 2 + 0.3;
+      const dist = (0.1 + Math.random() * 0.4) * Math.min(W,H) * 0.4;
+      px = cX + Math.cos(ang) * dist;
+      py = cY + Math.sin(ang) * dist;
+    }
+
+    // Glow
+    const glow = ctx.createRadialGradient(px, py, 0, px, py, radius * 3);
+    glow.addColorStop(0, `rgba(${r},${g},${b},${alpha * 0.5})`);
+    glow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(px, py, radius * 3, 0, Math.PI*2); ctx.fill();
+
+    // Core dot
+    ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+    ctx.beginPath(); ctx.arc(px, py, radius, 0, Math.PI*2); ctx.fill();
+
+    // GPS ring
+    if (obs.gpsAnchored) {
+      ctx.strokeStyle = `rgba(46,204,113,0.6)`; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(px, py, radius + 3, 0, Math.PI*2); ctx.stroke();
+    }
+
+    // Label
+    if (obs.desc || obs.obsType) {
+      ctx.fillStyle = `rgba(200,216,224,0.45)`; ctx.font = '8px Space Mono';
+      ctx.fillText((obs.desc || obs.obsType).slice(0,16), px + radius + 4, py + 3);
+    }
+  });
+
+  // Timestamp
+  ctx.fillStyle = 'rgba(42,58,72,0.5)'; ctx.font = '8px Space Mono';
+  ctx.fillText('SOVEREIGNSKIES LOCAL NODE · ' + new Date().toUTCString().slice(5,16), W - 280, H - 8);
+}
+
+function renderRecentObs(observations) {
+  const list = document.getElementById('recent-obs-list');
+  const recent = [...observations].reverse().slice(0, 6);
+  const uFLabels = { F: 'ft', C: 'm' };
+
+  list.innerHTML = recent.map(obs => {
+    const unit = uFLabels[obs.units] || 'ft';
+    const confColors = { high:'var(--green)', medium:'var(--amber)', low:'var(--amber-dim)' };
+    return `
+      <div class="recent-obs-card">
+        <div class="roc-header">
+          <div>
+            <span style="color:var(--cyan);font-size:10px;letter-spacing:1px">${obs.obsType.toUpperCase()}</span>
+            <span style="color:var(--text-muted);font-size:10px"> · ${obs.ts.slice(0,16).replace('T',' ')} UTC</span>
+            ${obs.place ? `<span style="color:var(--text-dim);font-size:10px"> · ${obs.place}</span>` : ''}
+          </div>
+          <span class="roc-id">${obs.id}</span>
+        </div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:10px;color:var(--text-dim);margin-top:4px">
+          ${obs.altAGL ? `<span>Alt: ~${obs.altAGL.toLocaleString()} ${unit}</span>` : ''}
+          ${obs.cloudBase ? `<span>LCL: ~${obs.cloudBase.toLocaleString()} ${unit}</span>` : ''}
+          ${obs.elevAngle != null ? `<span>Elev: ${obs.elevAngle}°</span>` : ''}
+          ${obs.azimuth != null ? `<span>Az: ${obs.azimuth}°</span>` : ''}
+          <span style="color:${confColors[obs.confLevel]||'var(--text-muted)'}">Conf: ${obs.confLevel}</span>
+          ${obs.gpsAnchored ? `<span style="color:var(--green)">GPS ✓</span>` : `<span style="color:var(--text-muted)">no GPS</span>`}
+        </div>
+        ${obs.desc ? `<div style="margin-top:6px;font-size:11px;color:var(--text);font-family:'Courier Prime',monospace;font-style:italic">"${obs.desc}"</div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+document.getElementById('obs-date').value = new Date().toISOString().slice(0,10);
+window.addEventListener('load', () => {
+  refreshSovereignUI();
+  updateDataQuality(null, null);
+  setTimeout(drawPortrait, 100);
+});
+window.addEventListener('resize', () => {
+  drawPortrait();
+  const obs = getSovObs();
+  if (obs.length > 0) drawClusterMap(obs);
+});
+</script>
+</body>
+</html>
