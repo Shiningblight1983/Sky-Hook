@@ -1,4 +1,4 @@
-# SkyAnchor — SovereignSkies Observer Network
+# Sky-Hook — SovereignSkies Observer Network
 
 **Free, open-source aerial observation science tool for citizen sky observers.**
 
@@ -8,7 +8,7 @@ No accounts. No paywalls. No speculation laundering. Just physics.
 
 ## What It Does
 
-SkyAnchor is a single-file HTML/JS application that turns a casual sky observation into a bounded physical measurement. Anyone with a phone can use it.
+Sky-Hook is a single-file HTML/JS application that turns a casual sky observation into a bounded physical measurement. Anyone with a phone can use it.
 
 - **GPS anchor** — locks your position, autofills elevation
 - **Weather autofill** — pulls live temperature and dew point from Open-Meteo (free, no API key)
@@ -65,4 +65,4 @@ Public domain. No proprietary claims. Formulas sourced from standard aviation me
 
 ---
 
-*SkyAnchor v2 · SovereignSkies Edition*
+*Sky-Hook v2 · SovereignSkies Edition*

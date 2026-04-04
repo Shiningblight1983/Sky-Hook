@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SkyAnchor v2 — SovereignSkies Observer Network</title>
+<title>Sky-Hook v2 — SovereignSkies Observer Network</title>
 <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -674,7 +674,7 @@
   <header>
     <div class="header-top">
       <div class="logo-block">
-        <h1>SkyAnchor</h1>
+        <h1>Sky-Hook</h1>
         <div class="tagline">SOVEREIGN SKIES OBSERVER NETWORK · CLOUD TRIANGULATION · OPEN METHODOLOGY</div>
       </div>
       <div class="version-badge">v2.0 · SOVEREIGN SKIES EDITION</div>
@@ -1348,7 +1348,7 @@
   </div>
 
   <footer>
-    SkyAnchor v2 — SovereignSkies Edition · Open methodology, public domain formulas, no proprietary claims.
+    Sky-Hook v2 — SovereignSkies Edition · Open methodology, public domain formulas, no proprietary claims.
     Weather data: <a href="https://open-meteo.com" target="_blank">Open-Meteo</a> (free, no key required).
     Reverse geocoding: OpenStreetMap Nominatim.
     Cluster data stored locally in your browser only — never transmitted without your action.
@@ -1983,14 +1983,14 @@ function drawPortrait() {
 
   // Watermark
   ctx.fillStyle = 'rgba(30,48,64,0.5)'; ctx.font = '8px Space Mono';
-  ctx.fillText('SKYANCHOR · SOVEREIGNSKIES · ' + new Date().toISOString().slice(0,10), margin, H - 8);
+  ctx.fillText('SKY-HOOK · SOVEREIGNSKIES · ' + new Date().toISOString().slice(0,10), margin, H - 8);
 }
 
 function downloadPortrait() {
   drawPortrait();
   const canvas = document.getElementById('portrait-canvas');
   const link = document.createElement('a');
-  link.download = 'skyanchor-portrait-' + new Date().toISOString().slice(0,10) + '.png';
+  link.download = 'sky-hook-portrait-' + new Date().toISOString().slice(0,10) + '.png';
   link.href = canvas.toDataURL('image/png');
   link.click();
 }
@@ -2001,10 +2001,10 @@ function copyPortraitLink() {
   const ang = document.getElementById('elev-angle').value;
   const date = document.getElementById('obs-date').value;
   const loc = gpsData ? (gpsData.place || 'GPS-anchored') : 'location not recorded';
-  const txt = `[SkyAnchor Observation — ${date} · ${loc}]\n` +
+  const txt = `[Sky-Hook Observation — ${date} · ${loc}]\n` +
     `Temp: ${T||'—'} · Dew Pt: ${Td||'—'} · Elev Angle: ${ang||'—'}°\n` +
     `Cloud type: ${cloudType||'—'} · Cloud relation: ${document.getElementById('cloud-relation').value}\n` +
-    `Tool: SkyAnchor v2 · SovereignSkies Edition`;
+    `Tool: Sky-Hook v2 · SovereignSkies Edition`;
   navigator.clipboard.writeText(txt).then(() => {
     alert('Observation summary copied to clipboard.');
   }).catch(() => {
@@ -2221,9 +2221,9 @@ Coordinate Format: WGS84 decimal degrees
   const confPct = document.getElementById('conf-pct')?.textContent || '—';
 
   const report = `══════════════════════════════════════════════════════════
-SKYANCHOR — SOVEREIGNSKIES OBSERVER REPORT
+SKY-HOOK — SOVEREIGNSKIES OBSERVER REPORT
 Generated: ${new Date().toISOString()}
-Observer Tool: SkyAnchor v2 · SovereignSkies Edition
+Observer Tool: Sky-Hook v2 · SovereignSkies Edition
 ══════════════════════════════════════════════════════════
 
 SECTION A — OBSERVER & CONDITIONS
@@ -2287,7 +2287,7 @@ Cloud base estimate: LCL standard aviation formula.
 Range estimates carry ±50% uncertainty.
 Temperature/dew point: ±1–3°F if from Open-Meteo API.
 
-SkyAnchor · SovereignSkies Observer Network
+Sky-Hook · SovereignSkies Observer Network
 Open methodology. Public domain formulas.
 ══════════════════════════════════════════════════════════`;
 
@@ -2311,7 +2311,7 @@ function downloadReport() {
   const blob = new Blob([text], {type: 'text/plain'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'skyanchor-report-' + new Date().toISOString().slice(0,10) + '.txt';
+  a.download = 'sky-hook-report-' + new Date().toISOString().slice(0,10) + '.txt';
   a.click();
 }
 
