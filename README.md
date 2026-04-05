@@ -56,8 +56,9 @@ Open `index.html` in any modern browser. No build step. No dependencies. No serv
 Citizens have a right to know what is in their skies. This tool exists because one careful observer — anchored to a GPS position, with a calibrated temperature/dew point reading — can constrain an aerial object's altitude to within a physical bracket. That is not anecdote. It is a bounded physical measurement. Aggregated across many observers, it becomes a distributed sensor network that no institution controls.
 
 ## Contributing
+With institutional confidence in state and federal level agencies operating umder the guise of safety and security somehow feel neither safer or more secure. This is a great way to reclaim the narrative over our heads. please share
 
-Fork it. Improve it. The sky belongs to everyone who looks up carefully.
+Fork it. Improve it. The sky belongs to everyone.
 
 ## License
 
