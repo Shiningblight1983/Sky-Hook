@@ -18,6 +18,13 @@ Sky-Hook is a single-file HTML/JS application that turns a casual sky observatio
 - **Observer Portrait** — a live visual illustration of your observation that builds as you enter data; downloadable as PNG
 - **Scientific report generator** — structured field report in plain text, downloadable
 - **SovereignSkies tab** — anonymous observation submission; one submission unlocks the area cluster map
+## What It Does (v2 Update)
+- **Atmospheric Line of Sight Calculator** — Factores in standard air density fluctuations, sub-refractions, and thermal inversions (k-factor manipulation) to map exact structural visibility profiles over the Earth's physical curvature.
+
+## The Physics
+Atmospheric refraction line of sight calculation:
+d = √(2 * (R / (1 - k)) * h)
+Where R is the standard physical Earth radius (6,371,000 meters) and k is the atmospheric refraction coefficient tracking light trajectory through dense air layers.
 
 ## The Physics
 
